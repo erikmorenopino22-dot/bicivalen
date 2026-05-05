@@ -372,7 +372,7 @@ public class BicivalenDAO {
 		}
 	}
 
-	//
+	/*
 
 	public List<Producto> getProductosSinStock(int cantidad) {
 		Transaction transaction = null;
@@ -738,5 +738,6 @@ public class BicivalenDAO {
 		}
 		return lista;
 	}
+	*/
 
 }

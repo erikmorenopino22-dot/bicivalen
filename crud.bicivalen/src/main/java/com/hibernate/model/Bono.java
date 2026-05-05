@@ -1,6 +1,7 @@
 package com.hibernate.model;
 
-import java.time.LocalTime;
+import java.time.LocalDate;
+
 
 
 import jakarta.persistence.Column;
@@ -32,7 +33,7 @@ public class Bono {
 	String nombre;
 
 	@Column(name = "duracion")
-	LocalTime duracion;
+	LocalDate duracion;
 	
 	@Column(name = "descripcion")
 	String descripcion;

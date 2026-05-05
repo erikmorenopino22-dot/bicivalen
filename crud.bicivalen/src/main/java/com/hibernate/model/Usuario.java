@@ -28,6 +28,6 @@ public class Usuario {
 	@Column(name = "contraseña")
 	String contraseña;
 
-	//@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
-	//private Set<Ruta> rutas = new HashSet<>();
+	@OneToMany(mappedBy = "usuario")
+	private Set<Ruta> rutas;
 }

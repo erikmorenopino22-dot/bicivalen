@@ -8,6 +8,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.SpinnerDateModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 
@@ -22,6 +24,7 @@ import com.hibernate.model.Usuario;
 
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JComboBox;
 import javax.swing.JTextArea;
@@ -33,6 +36,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.awt.event.ActionEvent;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class App {
 
@@ -126,7 +131,6 @@ public class App {
 		modeloE.addColumn("Ubicación");
 		modeloE.addColumn("Capacidad");
 		modeloE.addColumn("Puestos Libres");
-		modeloE.addColumn("Bicicletas");
 
 		DefaultTableModel modeloB = new DefaultTableModel();
 		modeloB.addColumn("ID");
@@ -152,32 +156,34 @@ public class App {
 				modeloE.setRowCount(0);
 				List<Estacion> listaEstacion = bDao.selectAllEstacion();
 				for (Estacion est : listaEstacion) {
-				    Object[] fila = { est.getId(), est.getNombre(), est.getUbicacion(), est.getCapacidad(), est.getPuestos() };
-				    modeloE.addRow(fila);
+					Object[] fila = { est.getId(), est.getNombre(), est.getUbicacion(), est.getCapacidad(),
+							est.getPuestos() };
+					modeloE.addRow(fila);
 				}
 				modeloR.setRowCount(0);
 				List<Ruta> listaRuta = bDao.selectAllRuta();
 				for (Ruta r : listaRuta) {
-				    Object[] fila = { r.getId(), r.getUsuario(), r.getEstacionI(), r.getEstacionD(), r.getDuración(), r.getValoracion() };
-				    modeloR.addRow(fila);
+					Object[] fila = { r.getId(), r.getUsuario(), r.getEstacionI(), r.getEstacionD(), r.getDuracion(),
+							r.getValoracion() };
+					modeloR.addRow(fila);
 				}
 				modeloU.setRowCount(0);
 				List<Usuario> listaUsuario = bDao.selectAllUsuario();
 				for (Usuario u : listaUsuario) {
-				    Object[] fila = { u.getId(), u.getNombre(), u.getEmail(), u.getContraseña() };
-				    modeloU.addRow(fila);
+					Object[] fila = { u.getId(), u.getNombre(), u.getEmail(), u.getContraseña() };
+					modeloU.addRow(fila);
 				}
 				modeloBn.setRowCount(0);
 				List<Bono> listaBono = bDao.selectAllBono();
 				for (Bono b : listaBono) {
-				    Object[] fila = { b.getId(), b.getNombre(), b.getDuracion(), b.getDescripcion() };
-				    modeloBn.addRow(fila);
+					Object[] fila = { b.getId(), b.getNombre(), b.getDuracion(), b.getDescripcion() };
+					modeloBn.addRow(fila);
 				}
 				modeloB.setRowCount(0);
 				List<Bicicleta> listaBicicleta = bDao.selectAllBicicleta();
 				for (Bicicleta b : listaBicicleta) {
-				    Object[] fila = { b.getId(), b.getTipo(), b.getEstado() };
-				    modeloB.addRow(fila);
+					Object[] fila = { b.getId(), b.getTipo(), b.getEstado() };
+					modeloB.addRow(fila);
 				}
 			}
 		});
@@ -380,13 +386,21 @@ public class App {
 		JButton btnAddR = new JButton("Add");
 		btnAddR.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String usuario = txtUsuarioR.getText();
-				String email = txtEmailU.getText();
-				String contraseña = passwordU.getText();
-				Usuario u = Usuario.builder().nombre(nombre).email(email).contraseña(contraseña).build();
-				bDao.insertUsuario(u);
-				javax.swing.JOptionPane.showMessageDialog(null, "Usuario Creado");
-				btnMostrar.doClick();
+				Usuario u = bDao.selectUsuarioById(idUsuario);
+				Bicicleta b = bDao.selectBicicletaById(idBici);
+				Estacion e1 = bDao.selectEstacionById(idOrigen);
+				Estacion e2 = bDao.selectEstacionById(idDestino);
+
+				Ruta r = Ruta.builder()
+				        .usuario(u)
+				        .bicicleta(b)
+				        .estacionI(e1)
+				        .estacionD(e2)
+				        .duracion(duracion)
+				        .valoracion(0)
+				        .build();
+
+				bDao.insertRuta(r);
 			}
 		});
 		btnAddR.setBounds(455, 118, 105, 27);
@@ -395,6 +409,7 @@ public class App {
 		JButton btnEditR = new JButton("Edit");
 		btnEditR.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+
 			}
 		});
 		btnEditR.setBounds(455, 176, 105, 27);
@@ -411,9 +426,9 @@ public class App {
 		JPanel panelE = new JPanel();
 		tabbedPane.addTab("Estación", null, panelE, null);
 		panelE.setLayout(null);
-		
+
 		JLabel lblNewLabel_1 = new JLabel("Ubicación:");
-		lblNewLabel_1.setBounds(230, 124, 60, 14);
+		lblNewLabel_1.setBounds(230, 124, 81, 14);
 		panelE.add(lblNewLabel_1);
 
 		JLabel lblId_2 = new JLabel("Id:");
@@ -460,7 +475,7 @@ public class App {
 		JComboBox comboBoxBicis = new JComboBox();
 		comboBoxBicis.setBounds(106, 234, 114, 26);
 		panelE.add(comboBoxBicis);
-		
+
 		txtUbicacionE = new JTextField();
 		txtUbicacionE.setBounds(301, 121, 114, 20);
 		panelE.add(txtUbicacionE);
@@ -471,7 +486,7 @@ public class App {
 		panelE.add(lblDisponible_1);
 
 		JCheckBox checkBoxE = new JCheckBox("");
-		checkBoxE.setBounds(301, 144, 114, 25);
+		checkBoxE.setBounds(301, 146, 114, 25);
 		panelE.add(checkBoxE);
 
 		tableE = new JTable(modeloE);
@@ -483,8 +498,13 @@ public class App {
 				txtNomE.setText(modeloE.getValueAt(index, 1).toString());
 				txtUbicacionE.setText(modeloE.getValueAt(index, 2).toString());
 				txtCapacidadE.setText(modeloE.getValueAt(index, 3).toString());
-				comboBoxBicis.setSelectedItem(modeloE.getValueAt(index, 3).toString());
-				txtPuestosE.setText(modeloE.getValueAt(index, 5).toString());
+				txtPuestosE.setText(modeloE.getValueAt(index, 4).toString());
+		        comboBoxBicis.removeAllItems();
+		        int idEstacion = (int) modeloE.getValueAt(index, 0);
+		        Estacion es = bDao.selectEstacionById(idEstacion);
+		        for (Bicicleta b : es.getBicicletas()) {
+		            comboBoxBicis.addItem(b.getId() + " - " + b.getTipo());
+		        }
 			}
 		});
 		tableE.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -495,6 +515,15 @@ public class App {
 		JButton btnAddE = new JButton("Add");
 		btnAddE.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				String nombre = txtNomE.getText();
+				String ubicacion = txtUbicacionE.getText();
+				int capacidad = Integer.parseInt(txtCapacidadE.getText());
+				int puestos = Integer.parseInt(txtPuestosE.getText());
+				Estacion e = Estacion.builder().nombre(nombre).ubicacion(ubicacion).capacidad(capacidad)
+						.puestos(puestos).build();
+				bDao.insertEstacion(e);
+				javax.swing.JOptionPane.showMessageDialog(null, "Estación Creada");
+				btnMostrar.doClick();
 			}
 		});
 		btnAddE.setBounds(455, 118, 105, 27);
@@ -503,6 +532,19 @@ public class App {
 		JButton btnEditE = new JButton("Edit");
 		btnEditE.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int codigo = Integer.parseInt(txtIdE.getText());
+				String nombre = txtNomE.getText();
+				String ubicacion = txtUbicacionE.getText();
+				int capacidad = Integer.parseInt(txtCapacidadE.getText());
+				int puestos = Integer.parseInt(txtPuestosE.getText());
+				Estacion es = bDao.selectEstacionById(codigo);
+				es.setNombre(nombre);
+				es.setUbicacion(ubicacion);
+				es.setCapacidad(capacidad);
+				es.setPuestos(puestos);
+				bDao.updateEstacion(es);
+				javax.swing.JOptionPane.showMessageDialog(null, "Estación Editada");
+				btnMostrar.doClick();
 			}
 		});
 		btnEditE.setBounds(455, 176, 105, 27);
@@ -511,6 +553,10 @@ public class App {
 		JButton btnDelE = new JButton("Del");
 		btnDelE.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int codigo = Integer.parseInt(txtIdE.getText());
+				bDao.deleteEstacion(codigo);
+				javax.swing.JOptionPane.showMessageDialog(null, "Estación Eliminada");
+				btnMostrar.doClick();
 			}
 		});
 		btnDelE.setBounds(455, 233, 105, 27);
@@ -584,6 +630,14 @@ public class App {
 		JButton btnAddB = new JButton("Add");
 		btnAddB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				String tipo = comboBoxTipoB.getSelectedItem().toString();
+				String estado = comboBoxEstadoB.getSelectedItem().toString();
+				int idEstacion = Integer.parseInt(txtidEstacionB.getText());
+				Estacion es = bDao.selectEstacionById(idEstacion);
+				Bicicleta b = Bicicleta.builder().tipo(tipo).estado(estado).estacion(es).build();
+				bDao.insertBicicleta(b);
+				javax.swing.JOptionPane.showMessageDialog(null, "Bicicleta Creada");
+				btnMostrar.doClick();
 			}
 		});
 		btnAddB.setBounds(455, 118, 105, 27);
@@ -592,6 +646,18 @@ public class App {
 		JButton btnEditB = new JButton("Edit");
 		btnEditB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int codigo = Integer.parseInt(txtIdB.getText());
+				String tipo = comboBoxTipoB.getSelectedItem().toString();
+				String estado = comboBoxEstadoB.getSelectedItem().toString();
+				int idEstacion = Integer.parseInt(txtidEstacionB.getText());
+				Estacion es = bDao.selectEstacionById(idEstacion);
+				Bicicleta b = bDao.selectBicicletaById(codigo);
+				b.setTipo(tipo);
+				b.setEstado(estado);
+				b.setEstacion(es);
+				bDao.updateBicicleta(b);
+				javax.swing.JOptionPane.showMessageDialog(null, "Bicicleta Editada");
+				btnMostrar.doClick();
 			}
 		});
 		btnEditB.setBounds(455, 176, 105, 27);
@@ -600,6 +666,10 @@ public class App {
 		JButton btnDelB = new JButton("Del");
 		btnDelB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int codigo = Integer.parseInt(txtIdB.getText());
+				bDao.deleteBicicleta(codigo);
+				javax.swing.JOptionPane.showMessageDialog(null, "Bicicleta Eliminada");
+				btnMostrar.doClick();
 			}
 		});
 		btnDelB.setBounds(455, 233, 105, 27);
@@ -640,9 +710,9 @@ public class App {
 		DescripcionBn.setBounds(95, 212, 225, 48);
 		panelBn.add(DescripcionBn);
 
-		//TimePicker horaSalida = new TimePicker();
-		//horaSalida.setBounds(95, 181, 114, 21);
-		//panelBn.add(horaSalida);
+		JComboBox comboBoxBn = new JComboBox();
+		comboBoxBn.setBounds(95, 178, 114, 26);
+		panelBn.add(comboBoxBn);
 
 		tableBn = new JTable(modeloBn);
 		tableBn.addMouseListener(new MouseAdapter() {
@@ -651,8 +721,8 @@ public class App {
 				int index = tableBn.getSelectedRow();
 				txtIdBn.setText(modeloBn.getValueAt(index, 0).toString());
 				txtNomBn.setText(modeloBn.getValueAt(index, 1).toString());
-				//horaSalida.setText(modeloBn.getValueAt(index, 2).toString());
-				DescripcionBn.setText(modeloBn.getValueAt(index, 2).toString());
+				comboBoxBn.setSelectedItem(modeloBn.getValueAt(index, 2).toString());
+				DescripcionBn.setText(modeloBn.getValueAt(index, 3).toString());
 			}
 		});
 		tableBn.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -663,6 +733,29 @@ public class App {
 		JButton btnAddBn = new JButton("Add");
 		btnAddBn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				String nombre = txtNomBn.getText();
+				String seleccion = comboBoxBn.getSelectedItem().toString();
+				LocalDate hoy = LocalDate.now();
+				LocalDate duracion = null;
+				switch (seleccion) {
+				case "1 día":
+					duracion = hoy.plusDays(1);
+					break;
+				case "1 mes":
+					duracion = hoy.plusMonths(1);
+					break;
+				case "3 meses":
+					duracion = hoy.plusMonths(3);
+					break;
+				case "1 año":
+					duracion = hoy.plusYears(1);
+					break;
+				}
+				String descripcion = DescripcionBn.getText();
+				Bono bn = Bono.builder().nombre(nombre).duracion(duracion).descripcion(descripcion).build();
+				bDao.insertBono(bn);
+				javax.swing.JOptionPane.showMessageDialog(null, "Bono Creado");
+				btnMostrar.doClick();
 			}
 		});
 		btnAddBn.setBounds(455, 118, 105, 27);
@@ -671,6 +764,10 @@ public class App {
 		JButton btnDelBn = new JButton("Del");
 		btnDelBn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int codigo = Integer.parseInt(txtIdBn.getText());
+				bDao.deleteBono(codigo);
+				javax.swing.JOptionPane.showMessageDialog(null, "Bono Eliminado");
+				btnMostrar.doClick();
 			}
 		});
 		btnDelBn.setBounds(455, 233, 105, 27);
@@ -679,6 +776,33 @@ public class App {
 		JButton btnEditBn = new JButton("Edit");
 		btnEditBn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int codigo = Integer.parseInt(txtIdBn.getText());
+				String nombre = txtNomBn.getText();
+				String seleccion = comboBoxBn.getSelectedItem().toString();
+				LocalDate hoy = LocalDate.now();
+				LocalDate duracion = null;
+				switch (seleccion) {
+				case "1 día":
+					duracion = hoy.plusDays(1);
+					break;
+				case "1 mes":
+					duracion = hoy.plusMonths(1);
+					break;
+				case "3 meses":
+					duracion = hoy.plusMonths(3);
+					break;
+				case "1 año":
+					duracion = hoy.plusYears(1);
+					break;
+				}
+				String descripcion = DescripcionBn.getText();
+				Bono bn = bDao.selectBonoById(codigo);
+				bn.setNombre(nombre);
+				bn.setDuracion(duracion);
+				bn.setDescripcion(descripcion);
+				bDao.updateBono(bn);
+				javax.swing.JOptionPane.showMessageDialog(null, "Bono Editado");
+				btnMostrar.doClick();
 			}
 		});
 		btnEditBn.setBounds(455, 176, 105, 27);

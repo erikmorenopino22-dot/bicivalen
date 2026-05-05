@@ -25,19 +25,10 @@ public class Bicicleta {
 	@Column(name = "estado")
 	String estado;
 	
-	//@ManyToMany(fetch = FetchType.LAZY)
-	//@JoinTable(name = "control", joinColumns = @JoinColumn(name = "bicicleta_id"), inverseJoinColumns = @JoinColumn(name = "estacion_id"))
-	//Set<Estacion> estaciones = new HashSet<>();
-
-	//public void addEstacion(Estacion e) {
-	//    estaciones.add(e);
-	//    e.getBicicletas().add(this);
-	//}
-
-	//public void removeEstacion(Estacion e) {
-	//    estaciones.remove(e);
-	//    e.getBicicletas().remove(this);
-	//}
+	@Column(name = "estadoUso")
+	String estadoUso; // "LIBRE", "EN_RUTA", "MANTENIMIENTO"
 	
-
+	@ManyToOne
+	@JoinColumn(name = "estacion_id") 
+	private Estacion estacion;
 }

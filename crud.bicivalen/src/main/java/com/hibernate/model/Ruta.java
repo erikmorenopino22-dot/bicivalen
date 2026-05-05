@@ -13,13 +13,17 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Ruta {
-
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	int id;
 	@ManyToOne
 	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;
+
+	@ManyToOne
+	@JoinColumn(name = "bicicleta_id")
+	private Bicicleta bicicleta;
 
 	@ManyToOne
 	@JoinColumn(name = "estacionI_id")
@@ -30,9 +34,8 @@ public class Ruta {
 	private Estacion estacionD;
 
 	@Column(name = "duracion")
-	int duración;
+	int duracion; // minutos por ejemplo
 
 	@Column(name = "valoracion")
 	int valoracion;
-
 }
