@@ -31,4 +31,8 @@ public class Bicicleta {
 	@ManyToOne
 	@JoinColumn(name = "estacion_id") 
 	private Estacion estacion;
+	@Override
+	public String toString() {
+	    return tipo + " (" + id + ")";
+	}
 }

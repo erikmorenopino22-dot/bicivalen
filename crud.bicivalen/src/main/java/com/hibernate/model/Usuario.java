@@ -30,4 +30,7 @@ public class Usuario {
 
 	@OneToMany(mappedBy = "usuario")
 	private Set<Ruta> rutas;
+	
+	@Override
+	public String toString() { return id + " - " + nombre; }
 }

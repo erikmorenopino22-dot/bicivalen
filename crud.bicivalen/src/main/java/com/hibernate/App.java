@@ -41,6 +41,26 @@ import java.time.LocalTime;
 
 public class App {
 
+	private void cargarEstaciones(JComboBox<Estacion> combo, BicivalenDAO bDao) {
+		combo.removeAllItems();
+
+		List<Estacion> estaciones = bDao.selectAllEstacion();
+
+		for (Estacion es : estaciones) {
+			combo.addItem(es);
+		}
+	}
+
+	private void cargarBicicletas(JComboBox<Bicicleta> combo, Estacion estacion) {
+		combo.removeAllItems();
+
+		if (estacion != null) {
+			for (Bicicleta b : estacion.getBicicletas()) {
+				combo.addItem(b);
+			}
+		}
+	}
+
 	private JFrame Admin;
 	private JTextField txtIdU;
 	private JTextField txtNomU;
@@ -49,11 +69,7 @@ public class App {
 	private JPasswordField passwordU;
 	private JTable tableU;
 	private JTextField txtIdR;
-	private JTextField txtUsuarioR;
-	private JTextField txtEstaciónOR;
-	private JTextField txtEstaciónDR;
 	private JTextField txtDuraciónR;
-	private JTextField txtReseñaR;
 	private JTable tableR;
 	private JTextField txtIdE;
 	private JTextField txtNomE;
@@ -120,6 +136,7 @@ public class App {
 		DefaultTableModel modeloR = new DefaultTableModel();
 		modeloR.addColumn("ID");
 		modeloR.addColumn("Usuario");
+		modeloR.addColumn("Bicicleta");
 		modeloR.addColumn("EstaciónO");
 		modeloR.addColumn("EstaciónD");
 		modeloR.addColumn("Duración");
@@ -138,11 +155,11 @@ public class App {
 		modeloB.addColumn("Estado");
 		modeloB.addColumn("Ubicación");
 
-		DefaultTableModel modeloBn = new DefaultTableModel();
-		modeloBn.addColumn("ID");
-		modeloBn.addColumn("Nombre");
-		modeloBn.addColumn("Duración");
-		modeloBn.addColumn("Descripción");
+		DefaultTableModel modeloBono = new DefaultTableModel();
+		modeloBono.addColumn("ID");
+		modeloBono.addColumn("Nombre");
+		modeloBono.addColumn("Tipo");
+		modeloBono.addColumn("Descripción");
 
 		Admin = new JFrame();
 		Admin.setTitle("BiciValen-Admin");
@@ -163,7 +180,7 @@ public class App {
 				modeloR.setRowCount(0);
 				List<Ruta> listaRuta = bDao.selectAllRuta();
 				for (Ruta r : listaRuta) {
-					Object[] fila = { r.getId(), r.getUsuario(), r.getEstacionI(), r.getEstacionD(), r.getDuracion(),
+					Object[] fila = { r.getId(), r.getUsuario(),r.getBicicleta(), r.getEstacionI(), r.getEstacionD(), r.getDuracion(),
 							r.getValoracion() };
 					modeloR.addRow(fila);
 				}
@@ -173,23 +190,25 @@ public class App {
 					Object[] fila = { u.getId(), u.getNombre(), u.getEmail(), u.getContraseña() };
 					modeloU.addRow(fila);
 				}
-				modeloBn.setRowCount(0);
+				modeloBono.setRowCount(0);
 				List<Bono> listaBono = bDao.selectAllBono();
-				for (Bono b : listaBono) {
-					Object[] fila = { b.getId(), b.getNombre(), b.getDuracion(), b.getDescripcion() };
-					modeloBn.addRow(fila);
+				for (Bono bn : listaBono) {
+					Object[] fila2 = { bn.getId(), bn.getNombre(), bn.getTipo(), bn.getDescripcion() };
+					modeloBono.addRow(fila2);
 				}
 				modeloB.setRowCount(0);
 				List<Bicicleta> listaBicicleta = bDao.selectAllBicicleta();
 				for (Bicicleta b : listaBicicleta) {
-					Object[] fila = { b.getId(), b.getTipo(), b.getEstado() };
+					Object[] fila = { b.getId(), b.getTipo(), b.getEstado(), b.getEstacion() };
 					modeloB.addRow(fila);
 				}
+
 			}
 		});
 		btnMostrar.setVisible(false);
 		btnMostrar.setBounds(35, 25, 105, 27);
 		Admin.getContentPane().add(btnMostrar);
+		btnMostrar.doClick();
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setBounds(106, 103, 577, 301);
@@ -319,11 +338,11 @@ public class App {
 		panelR.add(lblUsuario);
 
 		JLabel lblEstacino = new JLabel("EstaciónO:");
-		lblEstacino.setBounds(12, 200, 72, 17);
+		lblEstacino.setBounds(12, 216, 72, 17);
 		panelR.add(lblEstacino);
 
 		JLabel lblEstacind = new JLabel("EstaciónD:");
-		lblEstacind.setBounds(12, 225, 72, 17);
+		lblEstacind.setBounds(12, 238, 72, 17);
 		panelR.add(lblEstacind);
 
 		JLabel lblDuracin = new JLabel("Duración:");
@@ -340,30 +359,34 @@ public class App {
 		panelR.add(txtIdR);
 		txtIdR.setColumns(10);
 
-		txtUsuarioR = new JTextField();
-		txtUsuarioR.setBounds(90, 171, 114, 21);
-		panelR.add(txtUsuarioR);
-		txtUsuarioR.setColumns(10);
-
-		txtEstaciónOR = new JTextField();
-		txtEstaciónOR.setBounds(90, 198, 114, 21);
-		panelR.add(txtEstaciónOR);
-		txtEstaciónOR.setColumns(10);
-
-		txtEstaciónDR = new JTextField();
-		txtEstaciónDR.setBounds(90, 223, 114, 21);
-		panelR.add(txtEstaciónDR);
-		txtEstaciónDR.setColumns(10);
-
 		txtDuraciónR = new JTextField();
 		txtDuraciónR.setBounds(285, 144, 114, 21);
 		panelR.add(txtDuraciónR);
 		txtDuraciónR.setColumns(10);
 
-		txtReseñaR = new JTextField();
-		txtReseñaR.setBounds(285, 171, 114, 21);
-		panelR.add(txtReseñaR);
-		txtReseñaR.setColumns(10);
+		JComboBox<Usuario> comboBoxUsuarioR = new JComboBox();
+		bDao.selectAllUsuario().forEach(comboBoxUsuarioR::addItem);
+		comboBoxUsuarioR.setBounds(82, 170, 122, 22);
+		panelR.add(comboBoxUsuarioR);
+
+		JComboBox<Bicicleta> comboBoxBicicletaR = new JComboBox();
+		bDao.selectAllBicicleta().forEach(comboBoxBicicletaR::addItem);
+		comboBoxBicicletaR.setBounds(94, 197, 110, 22);
+		panelR.add(comboBoxBicicletaR);
+
+		JComboBox<Estacion> comboBoxEstaciónOR = new JComboBox();
+		bDao.selectAllEstacion().forEach(comboBoxEstaciónOR::addItem);
+		comboBoxEstaciónOR.setBounds(94, 233, 110, 22);
+		panelR.add(comboBoxEstaciónOR);
+
+		JComboBox<Estacion> comboBoxEstaciónD = new JComboBox();
+		bDao.selectAllEstacion().forEach(comboBoxEstaciónD::addItem);
+		comboBoxEstaciónD.setBounds(218, 235, 114, 22);
+		panelR.add(comboBoxEstaciónD);
+
+		JSpinner spinnerValR = new JSpinner(new SpinnerNumberModel(1, 1, 5, 1));
+		spinnerValR.setBounds(285, 171, 30, 20);
+		panelR.add(spinnerValR);
 
 		tableR = new JTable(modeloR);
 		tableR.addMouseListener(new MouseAdapter() {
@@ -371,11 +394,15 @@ public class App {
 			public void mouseClicked(MouseEvent e) {
 				int index = tableR.getSelectedRow();
 				txtIdR.setText(modeloR.getValueAt(index, 0).toString());
-				txtUsuarioR.setText(modeloR.getValueAt(index, 1).toString());
-				txtEstaciónOR.setText(modeloR.getValueAt(index, 2).toString());
-				txtEstaciónDR.setText(modeloR.getValueAt(index, 3).toString());
+				Object usuarioVal = modeloR.getValueAt(index, 1);
+				for (int i = 0; i < comboBoxUsuarioR.getItemCount(); i++) {
+					if (comboBoxUsuarioR.getItemAt(i).toString().equals(usuarioVal.toString())) {
+						comboBoxUsuarioR.setSelectedIndex(i);
+						break;
+					}
+				}
 				txtDuraciónR.setText(modeloR.getValueAt(index, 4).toString());
-				txtReseñaR.setText(modeloR.getValueAt(index, 5).toString());
+				spinnerValR.setValue(Integer.parseInt(modeloR.getValueAt(index, 5).toString()));
 			}
 		});
 		tableR.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -386,21 +413,17 @@ public class App {
 		JButton btnAddR = new JButton("Add");
 		btnAddR.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Usuario u = bDao.selectUsuarioById(idUsuario);
-				Bicicleta b = bDao.selectBicicletaById(idBici);
-				Estacion e1 = bDao.selectEstacionById(idOrigen);
-				Estacion e2 = bDao.selectEstacionById(idDestino);
-
-				Ruta r = Ruta.builder()
-				        .usuario(u)
-				        .bicicleta(b)
-				        .estacionI(e1)
-				        .estacionD(e2)
-				        .duracion(duracion)
-				        .valoracion(0)
-				        .build();
-
+				Usuario u = (Usuario) comboBoxUsuarioR.getSelectedItem();
+				Bicicleta bici = (Bicicleta) comboBoxBicicletaR.getSelectedItem();
+				Estacion estO = (Estacion) comboBoxEstaciónOR.getSelectedItem();
+				Estacion estD = (Estacion) comboBoxEstaciónD.getSelectedItem();
+				int duracion = Integer.parseInt(txtDuraciónR.getText());
+				int valoracion = (int) spinnerValR.getValue();
+				Ruta r = Ruta.builder().usuario(u).bicicleta(bici).estacionI(estO).estacionD(estD).duracion(duracion)
+						.valoracion(valoracion).build();
 				bDao.insertRuta(r);
+				javax.swing.JOptionPane.showMessageDialog(null, "Ruta Creada");
+				btnMostrar.doClick();
 			}
 		});
 		btnAddR.setBounds(455, 118, 105, 27);
@@ -422,6 +445,10 @@ public class App {
 		});
 		btnDelR.setBounds(455, 233, 105, 27);
 		panelR.add(btnDelR);
+
+		JLabel lblNewLabel_2 = new JLabel("Bicicleta:");
+		lblNewLabel_2.setBounds(12, 201, 46, 14);
+		panelR.add(lblNewLabel_2);
 
 		JPanel panelE = new JPanel();
 		tabbedPane.addTab("Estación", null, panelE, null);
@@ -499,12 +526,10 @@ public class App {
 				txtUbicacionE.setText(modeloE.getValueAt(index, 2).toString());
 				txtCapacidadE.setText(modeloE.getValueAt(index, 3).toString());
 				txtPuestosE.setText(modeloE.getValueAt(index, 4).toString());
-		        comboBoxBicis.removeAllItems();
-		        int idEstacion = (int) modeloE.getValueAt(index, 0);
-		        Estacion es = bDao.selectEstacionById(idEstacion);
-		        for (Bicicleta b : es.getBicicletas()) {
-		            comboBoxBicis.addItem(b.getId() + " - " + b.getTipo());
-		        }
+				comboBoxBicis.removeAllItems();
+				int idEstacion = (int) modeloE.getValueAt(index, 0);
+				Estacion es = bDao.selectEstacionById(idEstacion);
+				cargarBicicletas(comboBoxBicis, es);
 			}
 		});
 		tableE.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -598,10 +623,9 @@ public class App {
 		comboBoxEstadoB.setBounds(90, 172, 114, 26);
 		panelB.add(comboBoxEstadoB);
 
-		txtidEstacionB = new JTextField();
-		txtidEstacionB.setBounds(90, 204, 114, 21);
-		panelB.add(txtidEstacionB);
-		txtidEstacionB.setColumns(10);
+		JComboBox<Estacion> comboBoxEstacionB = new JComboBox<>();
+		comboBoxEstacionB.setBounds(90, 204, 114, 26);
+		panelB.add(comboBoxEstacionB);
 
 		JLabel lblDisponible = new JLabel("Disponible:");
 		lblDisponible.setBounds(12, 235, 68, 17);
@@ -611,6 +635,8 @@ public class App {
 		checkBoxB.setBounds(90, 231, 114, 25);
 		panelB.add(checkBoxB);
 
+		cargarEstaciones(comboBoxEstacionB, bDao);
+
 		tableB = new JTable(modeloB);
 		tableB.addMouseListener(new MouseAdapter() {
 			@Override
@@ -619,7 +645,8 @@ public class App {
 				txtIdB.setText(modeloB.getValueAt(index, 0).toString());
 				comboBoxTipoB.setSelectedItem(modeloB.getValueAt(index, 1).toString());
 				comboBoxEstadoB.setSelectedItem(modeloB.getValueAt(index, 2).toString());
-				txtidEstacionB.setText(modeloB.getValueAt(index, 3).toString());
+				Estacion es = (Estacion) modeloB.getValueAt(index, 3);
+				comboBoxEstacionB.setSelectedItem(es);
 			}
 		});
 		tableB.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -632,8 +659,7 @@ public class App {
 			public void actionPerformed(ActionEvent e) {
 				String tipo = comboBoxTipoB.getSelectedItem().toString();
 				String estado = comboBoxEstadoB.getSelectedItem().toString();
-				int idEstacion = Integer.parseInt(txtidEstacionB.getText());
-				Estacion es = bDao.selectEstacionById(idEstacion);
+				Estacion es = (Estacion) comboBoxEstacionB.getSelectedItem();
 				Bicicleta b = Bicicleta.builder().tipo(tipo).estado(estado).estacion(es).build();
 				bDao.insertBicicleta(b);
 				javax.swing.JOptionPane.showMessageDialog(null, "Bicicleta Creada");
@@ -711,18 +737,19 @@ public class App {
 		panelBn.add(DescripcionBn);
 
 		JComboBox comboBoxBn = new JComboBox();
+		comboBoxBn.setModel(new DefaultComboBoxModel(new String[] { "1 Dia", "1 Mes", "3 Meses", "1 Año" }));
 		comboBoxBn.setBounds(95, 178, 114, 26);
 		panelBn.add(comboBoxBn);
 
-		tableBn = new JTable(modeloBn);
+		tableBn = new JTable(modeloBono);
 		tableBn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				int index = tableBn.getSelectedRow();
-				txtIdBn.setText(modeloBn.getValueAt(index, 0).toString());
-				txtNomBn.setText(modeloBn.getValueAt(index, 1).toString());
-				comboBoxBn.setSelectedItem(modeloBn.getValueAt(index, 2).toString());
-				DescripcionBn.setText(modeloBn.getValueAt(index, 3).toString());
+				txtIdBn.setText(modeloBono.getValueAt(index, 0).toString());
+				txtNomBn.setText(modeloBono.getValueAt(index, 1).toString());
+				comboBoxBn.setSelectedItem(modeloBono.getValueAt(index, 2).toString());
+				DescripcionBn.setText(modeloBono.getValueAt(index, 3).toString());
 			}
 		});
 		tableBn.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -734,25 +761,15 @@ public class App {
 		btnAddBn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String nombre = txtNomBn.getText();
-				String seleccion = comboBoxBn.getSelectedItem().toString();
-				LocalDate hoy = LocalDate.now();
-				LocalDate duracion = null;
-				switch (seleccion) {
-				case "1 día":
-					duracion = hoy.plusDays(1);
-					break;
-				case "1 mes":
-					duracion = hoy.plusMonths(1);
-					break;
-				case "3 meses":
-					duracion = hoy.plusMonths(3);
-					break;
-				case "1 año":
-					duracion = hoy.plusYears(1);
-					break;
-				}
+				String tipo = comboBoxBn.getSelectedItem().toString();
+				/*
+				 * LocalDate hoy = LocalDate.now(); LocalDate duracion = null; switch
+				 * (seleccion) { case "1 día": duracion = hoy.plusDays(1); break; case "1 mes":
+				 * duracion = hoy.plusMonths(1); break; case "3 meses": duracion =
+				 * hoy.plusMonths(3); break; case "1 año": duracion = hoy.plusYears(1); break; }
+				 */
 				String descripcion = DescripcionBn.getText();
-				Bono bn = Bono.builder().nombre(nombre).duracion(duracion).descripcion(descripcion).build();
+				Bono bn = Bono.builder().nombre(nombre).tipo(tipo).descripcion(descripcion).build();
 				bDao.insertBono(bn);
 				javax.swing.JOptionPane.showMessageDialog(null, "Bono Creado");
 				btnMostrar.doClick();
@@ -778,27 +795,11 @@ public class App {
 			public void actionPerformed(ActionEvent e) {
 				int codigo = Integer.parseInt(txtIdBn.getText());
 				String nombre = txtNomBn.getText();
-				String seleccion = comboBoxBn.getSelectedItem().toString();
-				LocalDate hoy = LocalDate.now();
-				LocalDate duracion = null;
-				switch (seleccion) {
-				case "1 día":
-					duracion = hoy.plusDays(1);
-					break;
-				case "1 mes":
-					duracion = hoy.plusMonths(1);
-					break;
-				case "3 meses":
-					duracion = hoy.plusMonths(3);
-					break;
-				case "1 año":
-					duracion = hoy.plusYears(1);
-					break;
-				}
+				String tipo = comboBoxBn.getSelectedItem().toString();
 				String descripcion = DescripcionBn.getText();
 				Bono bn = bDao.selectBonoById(codigo);
 				bn.setNombre(nombre);
-				bn.setDuracion(duracion);
+				bn.setTipo(tipo);
 				bn.setDescripcion(descripcion);
 				bDao.updateBono(bn);
 				javax.swing.JOptionPane.showMessageDialog(null, "Bono Editado");

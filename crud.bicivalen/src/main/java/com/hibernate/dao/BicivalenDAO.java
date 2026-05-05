@@ -318,11 +318,11 @@ public class BicivalenDAO {
 		return lista;
 	}
 
-	public void insertBono(Bono b) {
+	public void insertBono(Bono bono) {
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
-			session.persist(b);
+			session.persist(bono);
 			transaction.commit();
 		} catch (Exception e) {
 			if (transaction != null)
@@ -333,24 +333,24 @@ public class BicivalenDAO {
 
 	public Bono selectBonoById(int codigo) {
 		Transaction transaction = null;
-		Bono b = null;
+		Bono bono = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
-			b = session.get(Bono.class, codigo);
+			bono = session.get(Bono.class, codigo);
 			transaction.commit();
 		} catch (Exception e) {
 			if (transaction != null)
 				transaction.rollback();
 			e.printStackTrace();
 		}
-		return b;
+		return bono;
 	}
 
-	public void updateBono(Bono b) {
+	public void updateBono(Bono bono) {
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
-			session.merge(b);
+			session.merge(bono);
 			transaction.commit();
 		} catch (Exception e) {
 			if (transaction != null)
@@ -362,8 +362,8 @@ public class BicivalenDAO {
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
-			Bono b = session.get(Bono.class, id);
-			session.remove(b);
+			Bono bono = session.get(Bono.class, id);
+			session.remove(bono);
 			transaction.commit();
 		} catch (Exception e) {
 			if (transaction != null)

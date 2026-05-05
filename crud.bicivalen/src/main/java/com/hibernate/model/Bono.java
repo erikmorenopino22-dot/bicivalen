@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "bicicleta")
+@Table(name = "bono")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,8 +32,8 @@ public class Bono {
 	@Column(name = "nombre")
 	String nombre;
 
-	@Column(name = "duracion")
-	LocalDate duracion;
+	@Column(name = "tipo")
+	String tipo;
 	
 	@Column(name = "descripcion")
 	String descripcion;

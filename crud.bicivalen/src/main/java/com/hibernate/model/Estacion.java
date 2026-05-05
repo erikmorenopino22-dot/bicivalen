@@ -40,4 +40,8 @@ public class Estacion {
 		bicicletas.remove(b);
 		b.setEstacion(null);
 	}
+	@Override
+	public String toString() {
+	    return nombre; // o nombre + " (" + id + ")"
+	}
 }
