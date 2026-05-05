@@ -38,7 +38,7 @@ public class App2 {
 					UIManager.put("Component.focusWidth", 1);
 					UIManager.put("Button.innerFocusWidth", 0);
 					UIManager.put("Button.arc", 20);
-					UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 14));
+					UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 11));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -78,12 +78,12 @@ public class App2 {
 		InicioSesion.getContentPane().add(lblContrasea);
 
 		txtNombre = new JTextField();
-		txtNombre.setBounds(111, 159, 227, 21);
+		txtNombre.setBounds(111, 159, 227, 27);
 		InicioSesion.getContentPane().add(txtNombre);
 		txtNombre.setColumns(10);
 
 		passwordLogin = new JPasswordField();
-		passwordLogin.setBounds(111, 230, 227, 21);
+		passwordLogin.setBounds(111, 230, 227, 27);
 		InicioSesion.getContentPane().add(passwordLogin);
 
 		btnLogin = new JButton("Login");

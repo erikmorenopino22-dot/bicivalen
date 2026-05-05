@@ -9,10 +9,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import com.hibernate.model.Bicicleta;
+import com.hibernate.model.Bono;
 import com.hibernate.model.Estacion;
 import com.hibernate.model.Ruta;
 import com.hibernate.model.Usuario;
-
 
 public class BicivalenConection {
 	private static SessionFactory sessionFactory;
@@ -24,7 +24,8 @@ public class BicivalenConection {
 
 				Properties settings = new Properties();
 				settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-				settings.put(Environment.URL, "jdbc:mysql://79.112.124.81:3306/bicivalen?useSSL=false");
+				settings.put(Environment.URL,
+						"jdbc:mysql://79.116.71.14:3306/bicivalen?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
 				settings.put(Environment.USER, "Erik");
 				settings.put(Environment.PASS, "722007");
 				settings.put(Environment.SHOW_SQL, "true");
@@ -34,13 +35,14 @@ public class BicivalenConection {
 				configuration.setProperties(settings);
 
 				configuration.addAnnotatedClass(Bicicleta.class);
-				
+
 				configuration.addAnnotatedClass(Usuario.class);
-				
+
 				configuration.addAnnotatedClass(Estacion.class);
-				
+
 				configuration.addAnnotatedClass(Ruta.class);
 
+				configuration.addAnnotatedClass(Bono.class);
 
 				ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 						.applySettings(configuration.getProperties()).build();

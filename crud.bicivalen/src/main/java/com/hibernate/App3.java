@@ -41,7 +41,7 @@ public class App3 {
 					UIManager.put("Component.focusWidth", 1);
 					UIManager.put("Button.innerFocusWidth", 0);
 					UIManager.put("Button.arc", 20);
-					UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 14));
+					UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 11));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

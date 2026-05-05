@@ -29,22 +29,22 @@ public class Estacion {
 	@Column(name = "puestos")
 	int puestos;
 
-	@ManyToMany(mappedBy = "estacion", fetch = FetchType.LAZY)
-	Set<Bicicleta> bicicletas = new HashSet<>();
+	//@ManyToMany(mappedBy = "estacion", fetch = FetchType.LAZY)
+	//Set<Bicicleta> bicicletas = new HashSet<>();
 
-	public void addBicicleta(Bicicleta b) {
-		bicicletas.add(b);
-		b.getEstaciones().add(this);
-	}
+	//public void addBicicleta(Bicicleta b) {
+		//bicicletas.add(b);
+		//b.getEstaciones().add(this);
+	//}
 
-	public void removeBicicleta(Bicicleta b) {
-		bicicletas.remove(b);
-		b.getEstaciones().remove(this);
-	}
+	//public void removeBicicleta(Bicicleta b) {
+	//	bicicletas.remove(b);
+	//	b.getEstaciones().remove(this);
+	//}
 
-	@OneToMany(mappedBy = "estacionI", cascade = CascadeType.ALL)
-	private Set<Ruta> rutasInicio = new HashSet<>();
+	//@OneToMany(mappedBy = "estacionI", cascade = CascadeType.ALL)
+	///private Set<Ruta> rutasInicio = new HashSet<>();
 
-	@OneToMany(mappedBy = "estacionD", cascade = CascadeType.ALL)
-	private Set<Ruta> rutasDestino = new HashSet<>();
+	//@OneToMany(mappedBy = "estacionD", cascade = CascadeType.ALL)
+	//private Set<Ruta> rutasDestino = new HashSet<>();
 }

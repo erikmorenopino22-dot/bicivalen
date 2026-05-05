@@ -29,11 +29,8 @@ public class Ruta {
 	@JoinColumn(name = "estacionD_id")
 	private Estacion estacionD;
 
-	@Column(name = "inicio")
-	LocalDateTime inicio;
-	
-	@Column(name = "final")
-	LocalDateTime fin;
+	@Column(name = "duracion")
+	int duración;
 
 	@Column(name = "valoracion")
 	int valoracion;
