@@ -25,7 +25,7 @@ public class BicivalenConection {
 				Properties settings = new Properties();
 				settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
 				settings.put(Environment.URL,
-						"jdbc:mysql://79.116.76.23:3306/bicivalen?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
+						"jdbc:mysql://79.112.0.180:3306/bicivalen?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
 				settings.put(Environment.USER, "Erik");
 				settings.put(Environment.PASS, "722007");
 				settings.put(Environment.SHOW_SQL, "true");

@@ -1,20 +1,36 @@
 package com.hibernate;
 
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JTabbedPane;
-import javax.swing.JPanel;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.SpinnerDateModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.FlatLightLaf;
-///import com.github.lgooddatepicker.components.TimePicker;
 import com.hibernate.dao.BicivalenDAO;
 import com.hibernate.model.Bicicleta;
 import com.hibernate.model.Bono;
@@ -22,793 +38,763 @@ import com.hibernate.model.Estacion;
 import com.hibernate.model.Ruta;
 import com.hibernate.model.Usuario;
 
-import javax.swing.JPasswordField;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTable;
-import javax.swing.JComboBox;
-import javax.swing.JTextArea;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.DefaultComboBoxModel;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
-import java.awt.event.ActionEvent;
-import java.time.LocalDate;
-import java.time.LocalTime;
-
 public class App {
+
+	private JFrame Admin;
+	private JFrame frameLogin;
+	private JTextField txtIdU, txtNomU, txtEmailU, txtBonoU;
+	private JPasswordField passwordU;
+	private JTextField txtIdR, txtDuraciónR;
+	private JTextField txtIdE, txtNomE, txtCapacidadE, txtPuestosE, txtUbicacionE;
+	private JTextField txtIdB;
+	private JTextField txtIdBn, txtNomBn;
+	private JTable tableU, tableR, tableE, tableB, tableBn;
+
+	public static void main(String[] args) {
+		EventQueue.invokeLater(() -> {
+			try {
+				FlatLightLaf.setup();
+				aplicarEstilo();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			try {
+				App window = new App(null);
+				window.Admin.setVisible(true);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+	}
+
+	private static void aplicarEstilo() {
+		UIManager.put("Button.arc", 15);
+		UIManager.put("Component.arc", 15);
+		UIManager.put("TextComponent.arc", 10);
+		UIManager.put("Component.focusWidth", 1);
+		UIManager.put("Button.innerFocusWidth", 0);
+		UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 11));
+	}
+
+	public App() {
+		this(null);
+	}
+
+	public App(JFrame loginFrame) {
+		this.frameLogin = loginFrame;
+		initialize();
+	}
+
+	private JButton btnPrimario(String texto) {
+		JButton b = new JButton(texto);
+		b.setBackground(new Color(41, 128, 185));
+		b.setForeground(Color.WHITE);
+		b.setFocusPainted(false);
+		b.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		return b;
+	}
+
+	private JButton btnAdd(String texto) {
+		JButton b = new JButton(texto);
+		b.setBackground(new Color(39, 174, 96));
+		b.setForeground(Color.WHITE);
+		b.setFocusPainted(false);
+		b.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		return b;
+	}
+
+	private JButton btnDel(String texto) {
+		JButton b = new JButton(texto);
+		b.setBackground(new Color(192, 57, 43));
+		b.setForeground(Color.WHITE);
+		b.setFocusPainted(false);
+		b.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		return b;
+	}
+
+	private JLabel lbl(String texto) {
+		JLabel l = new JLabel(texto);
+		l.setForeground(new Color(60, 80, 120));
+		l.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		return l;
+	}
+
+	private JTextField txt(int cols) {
+		JTextField t = new JTextField(cols);
+		t.setBorder(new LineBorder(new Color(180, 200, 230), 1, true));
+		return t;
+	}
+
+	private JTextField txtId() {
+		JTextField t = txt(10);
+		t.setEditable(false);
+		t.setBackground(new Color(240, 245, 255));
+		return t;
+	}
+
+	private void estilizarTabla(JTable table) {
+		table.setRowHeight(24);
+		table.setGridColor(new Color(220, 230, 245));
+		table.getTableHeader().setBackground(new Color(41, 128, 185));
+		table.getTableHeader().setForeground(Color.WHITE);
+		table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+		table.setSelectionBackground(new Color(210, 230, 255));
+		table.setSelectionForeground(new Color(20, 40, 80));
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+	}
+
+	private JPanel separador(int x, int y, int w) {
+		JPanel sep = new JPanel();
+		sep.setBackground(new Color(200, 215, 235));
+		sep.setBounds(x, y, w, 1);
+		return sep;
+	}
+
+	private void cerrarSesion() {
+		Admin.dispose();
+		if (frameLogin != null) {
+			frameLogin.setVisible(true);
+		} else {
+			App2 login = new App2();
+			login.getFrame().setVisible(true);
+		}
+	}
 
 	private void cargarEstaciones(JComboBox<Estacion> combo, BicivalenDAO bDao) {
 		combo.removeAllItems();
-
-		List<Estacion> estaciones = bDao.selectAllEstacion();
-
-		for (Estacion es : estaciones) {
-			combo.addItem(es);
-		}
+		bDao.selectAllEstacion().forEach(combo::addItem);
 	}
 
 	private void cargarBicicletas(JComboBox<Bicicleta> combo, Estacion estacion) {
 		combo.removeAllItems();
-
-		if (estacion != null) {
-			for (Bicicleta b : estacion.getBicicletas()) {
-				combo.addItem(b);
-			}
-		}
+		if (estacion != null)
+			estacion.getBicicletas().forEach(combo::addItem);
 	}
 
-	private JFrame Admin;
-	private JTextField txtIdU;
-	private JTextField txtNomU;
-	private JTextField txtEmailU;
-	private JTextField txtBonoU;
-	private JPasswordField passwordU;
-	private JTable tableU;
-	private JTextField txtIdR;
-	private JTextField txtDuraciónR;
-	private JTable tableR;
-	private JTextField txtIdE;
-	private JTextField txtNomE;
-	private JTextField txtCapacidadE;
-	private JTextField txtPuestosE;
-	private JTable tableE;
-	private JTextField txtIdB;
-	private JTextField txtidEstacionB;
-	private JTable tableB;
-	private JTextField txtIdBn;
-	private JTextField txtNomBn;
-	private JTable tableBn;
-	private JTextField txtUbicacionE;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-
-				try {
-					FlatLightLaf.setup();
-					UIManager.put("Button.arc", 15);
-					UIManager.put("Component.arc", 15);
-					UIManager.put("TextComponent.arc", 10);
-					UIManager.put("Component.focusWidth", 1);
-					UIManager.put("Button.innerFocusWidth", 0);
-					UIManager.put("Button.arc", 20);
-					UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 11));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				try {
-					App window = new App();
-					window.Admin.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	/**
-	 * Create the application.
-	 */
-	public App() {
-		initialize();
-	}
-
-	/**
-	 * Initialize the contents of the frame.
-	 */
 	private void initialize() {
 
 		BicivalenDAO bDao = new BicivalenDAO();
 
-		DefaultTableModel modeloU = new DefaultTableModel();
-		modeloU.addColumn("ID");
-		modeloU.addColumn("Nombre");
-		modeloU.addColumn("Email");
-		modeloU.addColumn("Contraseña");
+		DefaultTableModel modeloU = new DefaultTableModel(new String[] { "ID", "Nombre", "Email", "Contraseña" }, 0) {
+			public boolean isCellEditable(int r, int c) {
+				return false;
+			}
+		};
+		DefaultTableModel modeloR = new DefaultTableModel(
+				new String[] { "ID", "Usuario", "EstaciónO", "EstaciónD", "Duración", "Valoración" }, 0) {
+			public boolean isCellEditable(int r, int c) {
+				return false;
+			}
+		};
+		DefaultTableModel modeloE = new DefaultTableModel(
+				new String[] { "ID", "Nombre", "Ubicación", "Capacidad", "Puestos Libres" }, 0) {
+			public boolean isCellEditable(int r, int c) {
+				return false;
+			}
+		};
+		DefaultTableModel modeloB = new DefaultTableModel(new String[] { "ID", "Tipo", "Estado", "Ubicación" }, 0) {
+			public boolean isCellEditable(int r, int c) {
+				return false;
+			}
+		};
+		DefaultTableModel modeloBono = new DefaultTableModel(new String[] { "ID", "Nombre", "Tipo", "Descripción" },
+				0) {
+			public boolean isCellEditable(int r, int c) {
+				return false;
+			}
+		};
 
-		DefaultTableModel modeloR = new DefaultTableModel();
-		modeloR.addColumn("ID");
-		modeloR.addColumn("Usuario");
-		modeloR.addColumn("Bicicleta");
-		modeloR.addColumn("EstaciónO");
-		modeloR.addColumn("EstaciónD");
-		modeloR.addColumn("Duración");
-		modeloR.addColumn("Reseña");
-
-		DefaultTableModel modeloE = new DefaultTableModel();
-		modeloE.addColumn("ID");
-		modeloE.addColumn("Nombre");
-		modeloE.addColumn("Ubicación");
-		modeloE.addColumn("Capacidad");
-		modeloE.addColumn("Puestos Libres");
-
-		DefaultTableModel modeloB = new DefaultTableModel();
-		modeloB.addColumn("ID");
-		modeloB.addColumn("Tipo");
-		modeloB.addColumn("Estado");
-		modeloB.addColumn("Ubicación");
-
-		DefaultTableModel modeloBono = new DefaultTableModel();
-		modeloBono.addColumn("ID");
-		modeloBono.addColumn("Nombre");
-		modeloBono.addColumn("Tipo");
-		modeloBono.addColumn("Descripción");
-
-		Admin = new JFrame();
-		Admin.setTitle("BiciValen-Admin");
-		Admin.setBounds(100, 100, 745, 600);
-		Admin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		Admin.getContentPane().setLayout(null);
-
-		JButton btnMostrar = new JButton("Mostrar");
-		btnMostrar.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				modeloE.setRowCount(0);
-				List<Estacion> listaEstacion = bDao.selectAllEstacion();
-				for (Estacion est : listaEstacion) {
-					Object[] fila = { est.getId(), est.getNombre(), est.getUbicacion(), est.getCapacidad(),
-							est.getPuestos() };
-					modeloE.addRow(fila);
-				}
-				modeloR.setRowCount(0);
-				List<Ruta> listaRuta = bDao.selectAllRuta();
-				for (Ruta r : listaRuta) {
-					Object[] fila = { r.getId(), r.getUsuario(),r.getBicicleta(), r.getEstacionI(), r.getEstacionD(), r.getDuracion(),
-							r.getValoracion() };
-					modeloR.addRow(fila);
-				}
-				modeloU.setRowCount(0);
-				List<Usuario> listaUsuario = bDao.selectAllUsuario();
-				for (Usuario u : listaUsuario) {
-					Object[] fila = { u.getId(), u.getNombre(), u.getEmail(), u.getContraseña() };
-					modeloU.addRow(fila);
-				}
-				modeloBono.setRowCount(0);
-				List<Bono> listaBono = bDao.selectAllBono();
-				for (Bono bn : listaBono) {
-					Object[] fila2 = { bn.getId(), bn.getNombre(), bn.getTipo(), bn.getDescripcion() };
-					modeloBono.addRow(fila2);
-				}
-				modeloB.setRowCount(0);
-				List<Bicicleta> listaBicicleta = bDao.selectAllBicicleta();
-				for (Bicicleta b : listaBicicleta) {
-					Object[] fila = { b.getId(), b.getTipo(), b.getEstado(), b.getEstacion() };
-					modeloB.addRow(fila);
-				}
-
+		Admin = new JFrame("BiciValen – Panel Administrador");
+		Admin.setBounds(100, 100, 760, 620);
+		Admin.setResizable(false);
+		Admin.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		Admin.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowClosing(java.awt.event.WindowEvent we) {
+				String[] opciones = { "Cerrar sesión", "Salir de la app", "Cancelar" };
+				int resp = JOptionPane.showOptionDialog(Admin, "¿Qué deseas hacer?", "Salir",
+						JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[2]);
+				if (resp == 0)
+					cerrarSesion();
+				else if (resp == 1)
+					System.exit(0);
 			}
 		});
+		Admin.getContentPane().setLayout(null);
+		Admin.getContentPane().setBackground(new Color(245, 248, 255));
+
+		JPanel cabecera = new JPanel();
+		cabecera.setBackground(new Color(20, 60, 120));
+		cabecera.setLayout(null);
+		cabecera.setBounds(0, 0, 760, 62);
+		Admin.getContentPane().add(cabecera);
+
+		JLabel lblTitulo = new JLabel("BiciValen");
+		lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+		lblTitulo.setForeground(Color.WHITE);
+		lblTitulo.setBounds(18, 8, 300, 28);
+		cabecera.add(lblTitulo);
+
+		JLabel lblSubtitulo = new JLabel("Panel de Administración");
+		lblSubtitulo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+		lblSubtitulo.setForeground(new Color(160, 200, 240));
+		lblSubtitulo.setBounds(18, 34, 300, 18);
+		cabecera.add(lblSubtitulo);
+
+		JButton btnCerrarSesion = new JButton("Cerrar Sesión");
+		btnCerrarSesion.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		btnCerrarSesion.setBackground(new Color(192, 57, 43));
+		btnCerrarSesion.setForeground(Color.WHITE);
+		btnCerrarSesion.setFocusPainted(false);
+		btnCerrarSesion.setBounds(620, 17, 120, 28);
+		cabecera.add(btnCerrarSesion);
+		btnCerrarSesion.addActionListener(e -> {
+			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Seguro que quieres cerrar sesión?", "Cerrar sesión",
+					JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION)
+				cerrarSesion();
+		});
+
+		JButton btnMostrar = new JButton("Mostrar");
 		btnMostrar.setVisible(false);
-		btnMostrar.setBounds(35, 25, 105, 27);
+		btnMostrar.setBounds(0, 0, 1, 1);
 		Admin.getContentPane().add(btnMostrar);
-		btnMostrar.doClick();
+		btnMostrar.addActionListener(e -> {
+			modeloE.setRowCount(0);
+			for (Estacion est : bDao.selectAllEstacion())
+				modeloE.addRow(new Object[] { est.getId(), est.getNombre(), est.getUbicacion(), est.getCapacidad(),
+						est.getPuestos() });
+
+			modeloR.setRowCount(0);
+			for (Ruta r : bDao.selectAllRuta())
+				modeloR.addRow(new Object[] { r.getId(), r.getUsuario(), r.getEstacionI(), r.getEstacionD(),
+						r.getDuracion(), r.getValoracion() });
+
+			modeloU.setRowCount(0);
+			for (Usuario u : bDao.selectAllUsuario())
+				modeloU.addRow(new Object[] { u.getId(), u.getNombre(), u.getEmail(), u.getContraseña() });
+
+			modeloBono.setRowCount(0);
+			for (Bono bn : bDao.selectAllBono())
+				modeloBono.addRow(new Object[] { bn.getId(), bn.getNombre(), bn.getTipo(), bn.getDescripcion() });
+
+			modeloB.setRowCount(0);
+			for (Bicicleta b : bDao.selectAllBicicleta())
+				modeloB.addRow(new Object[] { b.getId(), b.getTipo(), b.getEstado(), b.getEstacion() });
+		});
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setBounds(106, 103, 577, 301);
+		tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		tabbedPane.setBounds(10, 72, 730, 490);
 		Admin.getContentPane().add(tabbedPane);
 
 		JPanel panelU = new JPanel();
-		tabbedPane.addTab("Usuario", null, panelU, null);
 		panelU.setLayout(null);
-
-		JLabel lblId = new JLabel("Id:");
-		lblId.setBounds(12, 123, 16, 17);
-		panelU.add(lblId);
-
-		JLabel lblNom = new JLabel("Nom:");
-		lblNom.setBounds(12, 152, 60, 17);
-		panelU.add(lblNom);
-
-		JLabel lblEmail = new JLabel("Email:");
-		lblEmail.setBounds(12, 181, 60, 17);
-		panelU.add(lblEmail);
-
-		JLabel lblPwd = new JLabel("Pw:");
-		lblPwd.setBounds(12, 210, 44, 17);
-		panelU.add(lblPwd);
-
-		JLabel lblBono = new JLabel("Bono:");
-		lblBono.setBounds(12, 243, 60, 17);
-		panelU.add(lblBono);
-
-		txtIdU = new JTextField();
-		txtIdU.setEditable(false);
-		txtIdU.setBounds(67, 121, 114, 21);
-		panelU.add(txtIdU);
-		txtIdU.setColumns(10);
-
-		txtNomU = new JTextField();
-		txtNomU.setBounds(67, 150, 114, 21);
-		panelU.add(txtNomU);
-		txtNomU.setColumns(10);
-
-		txtEmailU = new JTextField();
-		txtEmailU.setBounds(67, 179, 114, 21);
-		panelU.add(txtEmailU);
-		txtEmailU.setColumns(10);
-
-		txtBonoU = new JTextField();
-		txtBonoU.setBounds(67, 241, 114, 21);
-		panelU.add(txtBonoU);
-		txtBonoU.setColumns(10);
-
-		passwordU = new JPasswordField();
-		passwordU.setBounds(67, 208, 114, 21);
-		panelU.add(passwordU);
+		panelU.setBackground(Color.WHITE);
+		tabbedPane.addTab("Usuario", null, panelU, null);
 
 		tableU = new JTable(modeloU);
-		tableU.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				int index = tableU.getSelectedRow();
-				txtIdU.setText(modeloU.getValueAt(index, 0).toString());
-				txtNomU.setText(modeloU.getValueAt(index, 1).toString());
-				txtEmailU.setText(modeloU.getValueAt(index, 2).toString());
-				passwordU.setText(modeloU.getValueAt(index, 3).toString());
-			}
-		});
-		tableU.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		JScrollPane scrollPane = new JScrollPane(tableU);
-		scrollPane.setBounds(12, 12, 548, 99);
-		panelU.add(scrollPane);
+		estilizarTabla(tableU);
+		JScrollPane scrollU = new JScrollPane(tableU);
+		scrollU.setBounds(12, 12, 700, 110);
+		scrollU.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
+		panelU.add(scrollU);
 
-		JButton btnAddU = new JButton("Add");
-		btnAddU.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String nombre = txtNomU.getText();
-				String email = txtEmailU.getText();
-				String contraseña = passwordU.getText();
-				Usuario u = Usuario.builder().nombre(nombre).email(email).contraseña(contraseña).build();
-				bDao.insertUsuario(u);
-				javax.swing.JOptionPane.showMessageDialog(null, "Usuario Creado");
-				btnMostrar.doClick();
-			}
-		});
-		btnAddU.setBounds(455, 118, 105, 27);
+		panelU.add(separador(12, 130, 700));
+
+		JLabel lblIdU = lbl("ID:");
+		lblIdU.setBounds(20, 142, 40, 17);
+		panelU.add(lblIdU);
+		JLabel lblNomU = lbl("Nombre:");
+		lblNomU.setBounds(20, 172, 60, 17);
+		panelU.add(lblNomU);
+		JLabel lblEmailU = lbl("Email:");
+		lblEmailU.setBounds(20, 202, 50, 17);
+		panelU.add(lblEmailU);
+		JLabel lblPwdU = lbl("Contraseña:");
+		lblPwdU.setBounds(20, 232, 80, 17);
+		panelU.add(lblPwdU);
+
+		txtIdU = txtId();
+		txtIdU.setBounds(100, 140, 130, 26);
+		panelU.add(txtIdU);
+		txtNomU = txt(10);
+		txtNomU.setBounds(100, 170, 130, 26);
+		panelU.add(txtNomU);
+		txtEmailU = txt(10);
+		txtEmailU.setBounds(100, 200, 130, 26);
+		panelU.add(txtEmailU);
+		passwordU = new JPasswordField();
+		passwordU.setBorder(new LineBorder(new Color(180, 200, 230), 1, true));
+		passwordU.setBounds(100, 230, 130, 26);
+		panelU.add(passwordU);
+
+		JButton btnAddU = btnAdd("Añadir");
+		btnAddU.setBounds(570, 140, 130, 32);
 		panelU.add(btnAddU);
-
-		JButton btnEditU = new JButton("Edit");
-		btnEditU.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdU.getText());
-				String nombre = txtNomU.getText();
-				String email = txtEmailU.getText();
-				String contraseña = passwordU.getText();
-				Usuario u = bDao.selectUsuarioById(codigo);
-				u.setNombre(nombre);
-				u.setEmail(email);
-				u.setContraseña(contraseña);
-				bDao.updateUsuario(u);
-				javax.swing.JOptionPane.showMessageDialog(null, "Usuario Editado");
-				btnMostrar.doClick();
-			}
-		});
-		btnEditU.setBounds(455, 176, 105, 27);
+		JButton btnEditU = btnPrimario("Editar");
+		btnEditU.setBounds(570, 185, 130, 32);
 		panelU.add(btnEditU);
-
-		JButton btnDelU = new JButton("Del");
-		btnDelU.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdU.getText());
-				bDao.deleteUsuario(codigo);
-				javax.swing.JOptionPane.showMessageDialog(null, "Usuario Eliminado");
-				btnMostrar.doClick();
-			}
-		});
-		btnDelU.setBounds(455, 233, 105, 27);
+		JButton btnDelU = btnDel("Eliminar");
+		btnDelU.setBounds(570, 230, 130, 32);
 		panelU.add(btnDelU);
 
-		JPanel panelR = new JPanel();
-		tabbedPane.addTab("Rutas", null, panelR, null);
-		panelR.setLayout(null);
-
-		JLabel lblId_1 = new JLabel("Id:");
-		lblId_1.setBounds(12, 146, 16, 17);
-		panelR.add(lblId_1);
-
-		JLabel lblUsuario = new JLabel("Usuario:");
-		lblUsuario.setBounds(12, 173, 60, 17);
-		panelR.add(lblUsuario);
-
-		JLabel lblEstacino = new JLabel("EstaciónO:");
-		lblEstacino.setBounds(12, 216, 72, 17);
-		panelR.add(lblEstacino);
-
-		JLabel lblEstacind = new JLabel("EstaciónD:");
-		lblEstacind.setBounds(12, 238, 72, 17);
-		panelR.add(lblEstacind);
-
-		JLabel lblDuracin = new JLabel("Duración:");
-		lblDuracin.setBounds(218, 146, 60, 17);
-		panelR.add(lblDuracin);
-
-		JLabel lblResea = new JLabel("Reseña:");
-		lblResea.setBounds(218, 173, 60, 17);
-		panelR.add(lblResea);
-
-		txtIdR = new JTextField();
-		txtIdR.setEditable(false);
-		txtIdR.setBounds(90, 144, 114, 21);
-		panelR.add(txtIdR);
-		txtIdR.setColumns(10);
-
-		txtDuraciónR = new JTextField();
-		txtDuraciónR.setBounds(285, 144, 114, 21);
-		panelR.add(txtDuraciónR);
-		txtDuraciónR.setColumns(10);
-
-		JComboBox<Usuario> comboBoxUsuarioR = new JComboBox();
-		bDao.selectAllUsuario().forEach(comboBoxUsuarioR::addItem);
-		comboBoxUsuarioR.setBounds(82, 170, 122, 22);
-		panelR.add(comboBoxUsuarioR);
-
-		JComboBox<Bicicleta> comboBoxBicicletaR = new JComboBox();
-		bDao.selectAllBicicleta().forEach(comboBoxBicicletaR::addItem);
-		comboBoxBicicletaR.setBounds(94, 197, 110, 22);
-		panelR.add(comboBoxBicicletaR);
-
-		JComboBox<Estacion> comboBoxEstaciónOR = new JComboBox();
-		bDao.selectAllEstacion().forEach(comboBoxEstaciónOR::addItem);
-		comboBoxEstaciónOR.setBounds(94, 233, 110, 22);
-		panelR.add(comboBoxEstaciónOR);
-
-		JComboBox<Estacion> comboBoxEstaciónD = new JComboBox();
-		bDao.selectAllEstacion().forEach(comboBoxEstaciónD::addItem);
-		comboBoxEstaciónD.setBounds(218, 235, 114, 22);
-		panelR.add(comboBoxEstaciónD);
-
-		JSpinner spinnerValR = new JSpinner(new SpinnerNumberModel(1, 1, 5, 1));
-		spinnerValR.setBounds(285, 171, 30, 20);
-		panelR.add(spinnerValR);
-
-		tableR = new JTable(modeloR);
-		tableR.addMouseListener(new MouseAdapter() {
-			@Override
+		tableU.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				int index = tableR.getSelectedRow();
-				txtIdR.setText(modeloR.getValueAt(index, 0).toString());
-				Object usuarioVal = modeloR.getValueAt(index, 1);
-				for (int i = 0; i < comboBoxUsuarioR.getItemCount(); i++) {
-					if (comboBoxUsuarioR.getItemAt(i).toString().equals(usuarioVal.toString())) {
-						comboBoxUsuarioR.setSelectedIndex(i);
-						break;
-					}
-				}
-				txtDuraciónR.setText(modeloR.getValueAt(index, 4).toString());
-				spinnerValR.setValue(Integer.parseInt(modeloR.getValueAt(index, 5).toString()));
+				int i = tableU.getSelectedRow();
+				txtIdU.setText(modeloU.getValueAt(i, 0).toString());
+				txtNomU.setText(modeloU.getValueAt(i, 1).toString());
+				txtEmailU.setText(modeloU.getValueAt(i, 2).toString());
+				passwordU.setText(modeloU.getValueAt(i, 3).toString());
 			}
 		});
-		tableR.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		JScrollPane scrollPane2 = new JScrollPane(tableR);
-		scrollPane2.setBounds(12, 12, 548, 99);
-		panelR.add(scrollPane2);
 
-		JButton btnAddR = new JButton("Add");
-		btnAddR.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Usuario u = (Usuario) comboBoxUsuarioR.getSelectedItem();
-				Bicicleta bici = (Bicicleta) comboBoxBicicletaR.getSelectedItem();
-				Estacion estO = (Estacion) comboBoxEstaciónOR.getSelectedItem();
-				Estacion estD = (Estacion) comboBoxEstaciónD.getSelectedItem();
-				int duracion = Integer.parseInt(txtDuraciónR.getText());
-				int valoracion = (int) spinnerValR.getValue();
-				Ruta r = Ruta.builder().usuario(u).bicicleta(bici).estacionI(estO).estacionD(estD).duracion(duracion)
-						.valoracion(valoracion).build();
-				bDao.insertRuta(r);
-				javax.swing.JOptionPane.showMessageDialog(null, "Ruta Creada");
+		btnAddU.addActionListener(e -> {
+			Usuario u = Usuario.builder().nombre(txtNomU.getText()).email(txtEmailU.getText())
+					.contraseña(passwordU.getText()).build();
+			bDao.insertUsuario(u);
+			JOptionPane.showMessageDialog(Admin, "Usuario creado correctamente.");
+			btnMostrar.doClick();
+		});
+		btnEditU.addActionListener(e -> {
+			int codigo = Integer.parseInt(txtIdU.getText());
+			Usuario u = bDao.selectUsuarioById(codigo);
+			u.setNombre(txtNomU.getText());
+			u.setEmail(txtEmailU.getText());
+			u.setContraseña(passwordU.getText());
+			bDao.updateUsuario(u);
+			JOptionPane.showMessageDialog(Admin, "Usuario actualizado.");
+			btnMostrar.doClick();
+		});
+		btnDelU.addActionListener(e -> {
+			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar este usuario?", "Confirmar",
+					JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION) {
+				bDao.deleteUsuario(Integer.parseInt(txtIdU.getText()));
+				JOptionPane.showMessageDialog(Admin, "Usuario eliminado.");
 				btnMostrar.doClick();
 			}
 		});
-		btnAddR.setBounds(455, 118, 105, 27);
+
+		JPanel panelR = new JPanel();
+		panelR.setLayout(null);
+		panelR.setBackground(Color.WHITE);
+		tabbedPane.addTab("Rutas", null, panelR, null);
+
+		tableR = new JTable(modeloR);
+		estilizarTabla(tableR);
+		JScrollPane scrollR = new JScrollPane(tableR);
+		scrollR.setBounds(12, 12, 700, 110);
+		scrollR.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
+		panelR.add(scrollR);
+
+		panelR.add(separador(12, 130, 700));
+
+		JLabel lblIdR = lbl("ID:");
+		lblIdR.setBounds(20, 142, 30, 17);
+		panelR.add(lblIdR);
+		JLabel lblUsuR = lbl("Usuario:");
+		lblUsuR.setBounds(20, 172, 60, 17);
+		panelR.add(lblUsuR);
+		JLabel lblBiciR = lbl("Bicicleta:");
+		lblBiciR.setBounds(20, 202, 65, 17);
+		panelR.add(lblBiciR);
+		JLabel lblEstOR = lbl("Est. Origen:");
+		lblEstOR.setBounds(20, 232, 80, 17);
+		panelR.add(lblEstOR);
+		JLabel lblEstDR = lbl("Est. Destino:");
+		lblEstDR.setBounds(20, 262, 85, 17);
+		panelR.add(lblEstDR);
+		JLabel lblDurR = lbl("Duración:");
+		lblDurR.setBounds(280, 142, 70, 17);
+		panelR.add(lblDurR);
+		JLabel lblValR = lbl("Valoración:");
+		lblValR.setBounds(280, 172, 70, 17);
+		panelR.add(lblValR);
+
+		txtIdR = txtId();
+		txtIdR.setBounds(110, 140, 120, 26);
+		panelR.add(txtIdR);
+		txtDuraciónR = txt(10);
+		txtDuraciónR.setBounds(360, 140, 100, 26);
+		panelR.add(txtDuraciónR);
+
+		JComboBox<Usuario> comboUsuR = new JComboBox<>();
+		comboUsuR.setBounds(110, 170, 120, 26);
+		panelR.add(comboUsuR);
+		JComboBox<Bicicleta> comboBiciR = new JComboBox<>();
+		comboBiciR.setBounds(110, 200, 120, 26);
+		panelR.add(comboBiciR);
+		JComboBox<Estacion> comboEstOR = new JComboBox<>();
+		comboEstOR.setBounds(110, 230, 120, 26);
+		panelR.add(comboEstOR);
+		JComboBox<Estacion> comboEstDR = new JComboBox<>();
+		comboEstDR.setBounds(110, 260, 120, 26);
+		panelR.add(comboEstDR);
+		JSpinner spinnerValR = new JSpinner(new SpinnerNumberModel(1, 1, 5, 1));
+		spinnerValR.setBounds(360, 170, 70, 26);
+		panelR.add(spinnerValR);
+
+		bDao.selectAllUsuario().forEach(comboUsuR::addItem);
+		bDao.selectAllBicicleta().forEach(comboBiciR::addItem);
+		bDao.selectAllEstacion().forEach(comboEstOR::addItem);
+		bDao.selectAllEstacion().forEach(comboEstDR::addItem);
+
+		JButton btnAddR = btnAdd("Añadir");
+		btnAddR.setBounds(570, 140, 130, 32);
 		panelR.add(btnAddR);
-
-		JButton btnEditR = new JButton("Edit");
-		btnEditR.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-
-			}
-		});
-		btnEditR.setBounds(455, 176, 105, 27);
+		JButton btnEditR = btnPrimario("Editar");
+		btnEditR.setBounds(570, 185, 130, 32);
 		panelR.add(btnEditR);
-
-		JButton btnDelR = new JButton("Del");
-		btnDelR.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		btnDelR.setBounds(455, 233, 105, 27);
+		JButton btnDelR = btnDel("Eliminar");
+		btnDelR.setBounds(570, 230, 130, 32);
 		panelR.add(btnDelR);
 
-		JLabel lblNewLabel_2 = new JLabel("Bicicleta:");
-		lblNewLabel_2.setBounds(12, 201, 46, 14);
-		panelR.add(lblNewLabel_2);
+		tableR.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				int i = tableR.getSelectedRow();
+				txtIdR.setText(modeloR.getValueAt(i, 0).toString());
+				txtDuraciónR.setText(modeloR.getValueAt(i, 4).toString());
+				Object valObj = modeloR.getValueAt(i, 5);
+				try {
+					spinnerValR.setValue(Integer.parseInt(valObj.toString()));
+				} catch (Exception ex) {
+				}
+			}
+		});
+
+		btnAddR.addActionListener(e -> {
+			Ruta r = Ruta.builder().usuario((Usuario) comboUsuR.getSelectedItem())
+					.bicicleta((Bicicleta) comboBiciR.getSelectedItem())
+					.estacionI((Estacion) comboEstOR.getSelectedItem())
+					.estacionD((Estacion) comboEstDR.getSelectedItem())
+					.duracion(Integer.parseInt(txtDuraciónR.getText())).valoracion((int) spinnerValR.getValue())
+					.build();
+			bDao.insertRuta(r);
+			JOptionPane.showMessageDialog(Admin, "Ruta creada correctamente.");
+			btnMostrar.doClick();
+		});
+		btnEditR.addActionListener(e -> {
+			Ruta r = bDao.selectRutaById(Integer.parseInt(txtIdR.getText()));
+			r.setUsuario((Usuario) comboUsuR.getSelectedItem());
+			r.setBicicleta((Bicicleta) comboBiciR.getSelectedItem());
+			r.setEstacionI((Estacion) comboEstOR.getSelectedItem());
+			r.setEstacionD((Estacion) comboEstDR.getSelectedItem());
+			r.setDuracion(Integer.parseInt(txtDuraciónR.getText()));
+			r.setValoracion((int) spinnerValR.getValue());
+			bDao.updateRuta(r);
+			JOptionPane.showMessageDialog(Admin, "Ruta actualizada.");
+			btnMostrar.doClick();
+		});
+		btnDelR.addActionListener(e -> {
+			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar esta ruta?", "Confirmar",
+					JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION) {
+				bDao.deleteRuta(Integer.parseInt(txtIdR.getText()));
+				JOptionPane.showMessageDialog(Admin, "Ruta eliminada.");
+				btnMostrar.doClick();
+			}
+		});
 
 		JPanel panelE = new JPanel();
-		tabbedPane.addTab("Estación", null, panelE, null);
 		panelE.setLayout(null);
-
-		JLabel lblNewLabel_1 = new JLabel("Ubicación:");
-		lblNewLabel_1.setBounds(230, 124, 81, 14);
-		panelE.add(lblNewLabel_1);
-
-		JLabel lblId_2 = new JLabel("Id:");
-		lblId_2.setBounds(12, 123, 60, 17);
-		panelE.add(lblId_2);
-
-		JLabel lblNewLabel = new JLabel("Nom:");
-		lblNewLabel.setBounds(12, 152, 60, 17);
-		panelE.add(lblNewLabel);
-
-		JLabel lblCapacidad = new JLabel("Capacidad:");
-		lblCapacidad.setBounds(12, 181, 77, 17);
-		panelE.add(lblCapacidad);
-
-		JLabel lblPuestos = new JLabel("Puestos:");
-		lblPuestos.setBounds(12, 210, 60, 17);
-		panelE.add(lblPuestos);
-
-		JLabel lblBicicletas = new JLabel("Bicicletas:");
-		lblBicicletas.setBounds(12, 239, 60, 17);
-		panelE.add(lblBicicletas);
-
-		txtIdE = new JTextField();
-		txtIdE.setEditable(false);
-		txtIdE.setBounds(106, 121, 114, 21);
-		panelE.add(txtIdE);
-		txtIdE.setColumns(10);
-
-		txtNomE = new JTextField();
-		txtNomE.setBounds(106, 150, 114, 21);
-		panelE.add(txtNomE);
-		txtNomE.setColumns(10);
-
-		txtCapacidadE = new JTextField();
-		txtCapacidadE.setBounds(107, 179, 114, 21);
-		panelE.add(txtCapacidadE);
-		txtCapacidadE.setColumns(10);
-
-		txtPuestosE = new JTextField();
-		txtPuestosE.setBounds(106, 208, 114, 21);
-		panelE.add(txtPuestosE);
-		txtPuestosE.setColumns(10);
-
-		JComboBox comboBoxBicis = new JComboBox();
-		comboBoxBicis.setBounds(106, 234, 114, 26);
-		panelE.add(comboBoxBicis);
-
-		txtUbicacionE = new JTextField();
-		txtUbicacionE.setBounds(301, 121, 114, 20);
-		panelE.add(txtUbicacionE);
-		txtUbicacionE.setColumns(10);
-
-		JLabel lblDisponible_1 = new JLabel("Disponible:");
-		lblDisponible_1.setBounds(230, 152, 77, 17);
-		panelE.add(lblDisponible_1);
-
-		JCheckBox checkBoxE = new JCheckBox("");
-		checkBoxE.setBounds(301, 146, 114, 25);
-		panelE.add(checkBoxE);
+		panelE.setBackground(Color.WHITE);
+		tabbedPane.addTab("Estación", null, panelE, null);
 
 		tableE = new JTable(modeloE);
+		estilizarTabla(tableE);
+		JScrollPane scrollE = new JScrollPane(tableE);
+		scrollE.setBounds(12, 12, 700, 110);
+		scrollE.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
+		panelE.add(scrollE);
+
+		panelE.add(separador(12, 130, 700));
+
+		JLabel lblIdE = lbl("ID:");
+		lblIdE.setBounds(20, 142, 30, 17);
+		panelE.add(lblIdE);
+		JLabel lblNomE = lbl("Nombre:");
+		lblNomE.setBounds(20, 172, 60, 17);
+		panelE.add(lblNomE);
+		JLabel lblUbE = lbl("Ubicación:");
+		lblUbE.setBounds(20, 202, 70, 17);
+		panelE.add(lblUbE);
+		JLabel lblCapE = lbl("Capacidad:");
+		lblCapE.setBounds(20, 232, 70, 17);
+		panelE.add(lblCapE);
+		JLabel lblPusE = lbl("Puestos:");
+		lblPusE.setBounds(20, 262, 60, 17);
+		panelE.add(lblPusE);
+		JLabel lblBicE = lbl("Bicicletas:");
+		lblBicE.setBounds(280, 142, 80, 17);
+		panelE.add(lblBicE);
+
+		txtIdE = txtId();
+		txtIdE.setBounds(105, 140, 130, 26);
+		panelE.add(txtIdE);
+		txtNomE = txt(10);
+		txtNomE.setBounds(105, 170, 130, 26);
+		panelE.add(txtNomE);
+		txtUbicacionE = txt(10);
+		txtUbicacionE.setBounds(105, 200, 130, 26);
+		panelE.add(txtUbicacionE);
+		txtCapacidadE = txt(10);
+		txtCapacidadE.setBounds(105, 230, 130, 26);
+		panelE.add(txtCapacidadE);
+		txtPuestosE = txt(10);
+		txtPuestosE.setBounds(105, 260, 130, 26);
+		panelE.add(txtPuestosE);
+
+		JComboBox<Bicicleta> comboBoxBicis = new JComboBox<>();
+		comboBoxBicis.setBounds(360, 138, 160, 26);
+		panelE.add(comboBoxBicis);
+
+		JButton btnAddE = btnAdd("Añadir");
+		btnAddE.setBounds(570, 140, 130, 32);
+		panelE.add(btnAddE);
+		JButton btnEditE = btnPrimario("Editar");
+		btnEditE.setBounds(570, 185, 130, 32);
+		panelE.add(btnEditE);
+		JButton btnDelE = btnDel("Eliminar");
+		btnDelE.setBounds(570, 230, 130, 32);
+		panelE.add(btnDelE);
+
 		tableE.addMouseListener(new MouseAdapter() {
-			@Override
 			public void mouseClicked(MouseEvent e) {
-				int index = tableE.getSelectedRow();
-				txtIdE.setText(modeloE.getValueAt(index, 0).toString());
-				txtNomE.setText(modeloE.getValueAt(index, 1).toString());
-				txtUbicacionE.setText(modeloE.getValueAt(index, 2).toString());
-				txtCapacidadE.setText(modeloE.getValueAt(index, 3).toString());
-				txtPuestosE.setText(modeloE.getValueAt(index, 4).toString());
-				comboBoxBicis.removeAllItems();
-				int idEstacion = (int) modeloE.getValueAt(index, 0);
-				Estacion es = bDao.selectEstacionById(idEstacion);
+				int i = tableE.getSelectedRow();
+				txtIdE.setText(modeloE.getValueAt(i, 0).toString());
+				txtNomE.setText(modeloE.getValueAt(i, 1).toString());
+				txtUbicacionE.setText(modeloE.getValueAt(i, 2).toString());
+				txtCapacidadE.setText(modeloE.getValueAt(i, 3).toString());
+				txtPuestosE.setText(modeloE.getValueAt(i, 4).toString());
+				int idEst = (int) modeloE.getValueAt(i, 0);
+				Estacion es = bDao.selectEstacionById(idEst);
 				cargarBicicletas(comboBoxBicis, es);
 			}
 		});
-		tableE.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		JScrollPane scrollPane3 = new JScrollPane(tableE);
-		scrollPane3.setBounds(12, 12, 548, 99);
-		panelE.add(scrollPane3);
 
-		JButton btnAddE = new JButton("Add");
-		btnAddE.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				String nombre = txtNomE.getText();
-				String ubicacion = txtUbicacionE.getText();
-				int capacidad = Integer.parseInt(txtCapacidadE.getText());
-				int puestos = Integer.parseInt(txtPuestosE.getText());
-				Estacion e = Estacion.builder().nombre(nombre).ubicacion(ubicacion).capacidad(capacidad)
-						.puestos(puestos).build();
-				bDao.insertEstacion(e);
-				javax.swing.JOptionPane.showMessageDialog(null, "Estación Creada");
+		btnAddE.addActionListener(e -> {
+			Estacion est = Estacion.builder().nombre(txtNomE.getText()).ubicacion(txtUbicacionE.getText())
+					.capacidad(Integer.parseInt(txtCapacidadE.getText()))
+					.puestos(Integer.parseInt(txtPuestosE.getText())).build();
+			bDao.insertEstacion(est);
+			JOptionPane.showMessageDialog(Admin, "Estación creada correctamente.");
+			btnMostrar.doClick();
+		});
+		btnEditE.addActionListener(e -> {
+			int codigo = Integer.parseInt(txtIdE.getText());
+			Estacion es = bDao.selectEstacionById(codigo);
+			es.setNombre(txtNomE.getText());
+			es.setUbicacion(txtUbicacionE.getText());
+			es.setCapacidad(Integer.parseInt(txtCapacidadE.getText()));
+			es.setPuestos(Integer.parseInt(txtPuestosE.getText()));
+			bDao.updateEstacion(es);
+			JOptionPane.showMessageDialog(Admin, "Estación actualizada.");
+			btnMostrar.doClick();
+		});
+		btnDelE.addActionListener(e -> {
+			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar esta estación?", "Confirmar",
+					JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION) {
+				bDao.deleteEstacion(Integer.parseInt(txtIdE.getText()));
+				JOptionPane.showMessageDialog(Admin, "Estación eliminada.");
 				btnMostrar.doClick();
 			}
 		});
-		btnAddE.setBounds(455, 118, 105, 27);
-		panelE.add(btnAddE);
-
-		JButton btnEditE = new JButton("Edit");
-		btnEditE.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdE.getText());
-				String nombre = txtNomE.getText();
-				String ubicacion = txtUbicacionE.getText();
-				int capacidad = Integer.parseInt(txtCapacidadE.getText());
-				int puestos = Integer.parseInt(txtPuestosE.getText());
-				Estacion es = bDao.selectEstacionById(codigo);
-				es.setNombre(nombre);
-				es.setUbicacion(ubicacion);
-				es.setCapacidad(capacidad);
-				es.setPuestos(puestos);
-				bDao.updateEstacion(es);
-				javax.swing.JOptionPane.showMessageDialog(null, "Estación Editada");
-				btnMostrar.doClick();
-			}
-		});
-		btnEditE.setBounds(455, 176, 105, 27);
-		panelE.add(btnEditE);
-
-		JButton btnDelE = new JButton("Del");
-		btnDelE.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdE.getText());
-				bDao.deleteEstacion(codigo);
-				javax.swing.JOptionPane.showMessageDialog(null, "Estación Eliminada");
-				btnMostrar.doClick();
-			}
-		});
-		btnDelE.setBounds(455, 233, 105, 27);
-		panelE.add(btnDelE);
 
 		JPanel panelB = new JPanel();
-		tabbedPane.addTab("Bicicleta", null, panelB, null);
 		panelB.setLayout(null);
-
-		JLabel lblId_3 = new JLabel("Id:");
-		lblId_3.setBounds(12, 115, 60, 17);
-		panelB.add(lblId_3);
-
-		JLabel lblTipo = new JLabel("Tipo:");
-		lblTipo.setBounds(12, 146, 60, 17);
-		panelB.add(lblTipo);
-
-		JLabel lblEstado = new JLabel("Estado:");
-		lblEstado.setBounds(12, 177, 60, 17);
-		panelB.add(lblEstado);
-
-		JLabel lblDondeEsta = new JLabel("Donde esta:");
-		lblDondeEsta.setBounds(12, 206, 84, 17);
-		panelB.add(lblDondeEsta);
-
-		txtIdB = new JTextField();
-		txtIdB.setEditable(false);
-		txtIdB.setBounds(90, 113, 114, 21);
-		panelB.add(txtIdB);
-		txtIdB.setColumns(10);
-
-		JComboBox comboBoxTipoB = new JComboBox();
-		comboBoxTipoB.setModel(new DefaultComboBoxModel(new String[] { "Electrica", "Basica" }));
-		comboBoxTipoB.setBounds(90, 141, 114, 26);
-		panelB.add(comboBoxTipoB);
-
-		JComboBox comboBoxEstadoB = new JComboBox();
-		comboBoxEstadoB.setModel(new DefaultComboBoxModel(new String[] { "Genial", "Bueno", "Malo" }));
-		comboBoxEstadoB.setBounds(90, 172, 114, 26);
-		panelB.add(comboBoxEstadoB);
-
-		JComboBox<Estacion> comboBoxEstacionB = new JComboBox<>();
-		comboBoxEstacionB.setBounds(90, 204, 114, 26);
-		panelB.add(comboBoxEstacionB);
-
-		JLabel lblDisponible = new JLabel("Disponible:");
-		lblDisponible.setBounds(12, 235, 68, 17);
-		panelB.add(lblDisponible);
-
-		JCheckBox checkBoxB = new JCheckBox("");
-		checkBoxB.setBounds(90, 231, 114, 25);
-		panelB.add(checkBoxB);
-
-		cargarEstaciones(comboBoxEstacionB, bDao);
+		panelB.setBackground(Color.WHITE);
+		tabbedPane.addTab("Bicicleta", null, panelB, null);
 
 		tableB = new JTable(modeloB);
-		tableB.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				int index = tableB.getSelectedRow();
-				txtIdB.setText(modeloB.getValueAt(index, 0).toString());
-				comboBoxTipoB.setSelectedItem(modeloB.getValueAt(index, 1).toString());
-				comboBoxEstadoB.setSelectedItem(modeloB.getValueAt(index, 2).toString());
-				Estacion es = (Estacion) modeloB.getValueAt(index, 3);
-				comboBoxEstacionB.setSelectedItem(es);
-			}
-		});
-		tableB.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		JScrollPane scrollPane4 = new JScrollPane(tableB);
-		scrollPane4.setBounds(12, 12, 548, 99);
-		panelB.add(scrollPane4);
+		estilizarTabla(tableB);
+		JScrollPane scrollB = new JScrollPane(tableB);
+		scrollB.setBounds(12, 12, 700, 110);
+		scrollB.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
+		panelB.add(scrollB);
+		panelB.add(separador(12, 130, 700));
+		JLabel lblIdB = lbl("ID:");
+		lblIdB.setBounds(20, 142, 30, 17);
+		panelB.add(lblIdB);
+		JLabel lblTipoB = lbl("Tipo:");
+		lblTipoB.setBounds(20, 172, 40, 17);
+		panelB.add(lblTipoB);
+		JLabel lblEstadB = lbl("Estado:");
+		lblEstadB.setBounds(20, 202, 55, 17);
+		panelB.add(lblEstadB);
+		JLabel lblEstacB = lbl("Estación:");
+		lblEstacB.setBounds(20, 232, 65, 17);
+		panelB.add(lblEstacB);
+		JLabel lblDispB = lbl("Disponible:");
+		lblDispB.setBounds(20, 262, 75, 17);
+		panelB.add(lblDispB);
 
-		JButton btnAddB = new JButton("Add");
-		btnAddB.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String tipo = comboBoxTipoB.getSelectedItem().toString();
-				String estado = comboBoxEstadoB.getSelectedItem().toString();
-				Estacion es = (Estacion) comboBoxEstacionB.getSelectedItem();
-				Bicicleta b = Bicicleta.builder().tipo(tipo).estado(estado).estacion(es).build();
-				bDao.insertBicicleta(b);
-				javax.swing.JOptionPane.showMessageDialog(null, "Bicicleta Creada");
-				btnMostrar.doClick();
-			}
-		});
-		btnAddB.setBounds(455, 118, 105, 27);
+		txtIdB = txtId();
+		txtIdB.setBounds(100, 140, 130, 26);
+		panelB.add(txtIdB);
+
+		JComboBox<String> comboTipoB = new JComboBox<>(new String[] { "Electrica", "Basica" });
+		comboTipoB.setBounds(100, 170, 130, 26);
+		panelB.add(comboTipoB);
+
+		JComboBox<String> comboEstadoB = new JComboBox<>(new String[] { "Genial", "Bueno", "Malo" });
+		comboEstadoB.setBounds(100, 200, 130, 26);
+		panelB.add(comboEstadoB);
+
+		JComboBox<Estacion> comboEstacionB = new JComboBox<>();
+		comboEstacionB.setBounds(100, 230, 130, 26);
+		panelB.add(comboEstacionB);
+
+		JCheckBox checkBoxB = new JCheckBox("");
+		checkBoxB.setBounds(100, 258, 30, 25);
+		panelB.add(checkBoxB);
+
+		cargarEstaciones(comboEstacionB, bDao);
+
+		JButton btnAddB = btnAdd("Añadir");
+		btnAddB.setBounds(570, 140, 130, 32);
 		panelB.add(btnAddB);
-
-		JButton btnEditB = new JButton("Edit");
-		btnEditB.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdB.getText());
-				String tipo = comboBoxTipoB.getSelectedItem().toString();
-				String estado = comboBoxEstadoB.getSelectedItem().toString();
-				int idEstacion = Integer.parseInt(txtidEstacionB.getText());
-				Estacion es = bDao.selectEstacionById(idEstacion);
-				Bicicleta b = bDao.selectBicicletaById(codigo);
-				b.setTipo(tipo);
-				b.setEstado(estado);
-				b.setEstacion(es);
-				bDao.updateBicicleta(b);
-				javax.swing.JOptionPane.showMessageDialog(null, "Bicicleta Editada");
-				btnMostrar.doClick();
-			}
-		});
-		btnEditB.setBounds(455, 176, 105, 27);
+		JButton btnEditB = btnPrimario("Editar");
+		btnEditB.setBounds(570, 185, 130, 32);
 		panelB.add(btnEditB);
-
-		JButton btnDelB = new JButton("Del");
-		btnDelB.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdB.getText());
-				bDao.deleteBicicleta(codigo);
-				javax.swing.JOptionPane.showMessageDialog(null, "Bicicleta Eliminada");
-				btnMostrar.doClick();
-			}
-		});
-		btnDelB.setBounds(455, 233, 105, 27);
+		JButton btnDelB = btnDel("Eliminar");
+		btnDelB.setBounds(570, 230, 130, 32);
 		panelB.add(btnDelB);
 
+		tableB.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				int i = tableB.getSelectedRow();
+				txtIdB.setText(modeloB.getValueAt(i, 0).toString());
+				comboTipoB.setSelectedItem(modeloB.getValueAt(i, 1).toString());
+				comboEstadoB.setSelectedItem(modeloB.getValueAt(i, 2).toString());
+				Object estObj = modeloB.getValueAt(i, 3);
+				if (estObj instanceof Estacion)
+					comboEstacionB.setSelectedItem(estObj);
+			}
+		});
+
+		btnAddB.addActionListener(e -> {
+			Bicicleta b = Bicicleta.builder().tipo(comboTipoB.getSelectedItem().toString())
+					.estado(comboEstadoB.getSelectedItem().toString())
+					.estacion((Estacion) comboEstacionB.getSelectedItem()).build();
+			bDao.insertBicicleta(b);
+			JOptionPane.showMessageDialog(Admin, "Bicicleta creada correctamente.");
+			btnMostrar.doClick();
+		});
+		btnEditB.addActionListener(e -> {
+			int codigo = Integer.parseInt(txtIdB.getText());
+			Bicicleta b = bDao.selectBicicletaById(codigo);
+			b.setTipo(comboTipoB.getSelectedItem().toString());
+			b.setEstado(comboEstadoB.getSelectedItem().toString());
+			b.setEstacion((Estacion) comboEstacionB.getSelectedItem());
+			bDao.updateBicicleta(b);
+			JOptionPane.showMessageDialog(Admin, "Bicicleta actualizada.");
+			btnMostrar.doClick();
+		});
+		btnDelB.addActionListener(e -> {
+			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar esta bicicleta?", "Confirmar",
+					JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION) {
+				bDao.deleteBicicleta(Integer.parseInt(txtIdB.getText()));
+				JOptionPane.showMessageDialog(Admin, "Bicicleta eliminada.");
+				btnMostrar.doClick();
+			}
+		});
+
 		JPanel panelBn = new JPanel();
-		tabbedPane.addTab("Bono", null, panelBn, null);
 		panelBn.setLayout(null);
-
-		JLabel lblId_4 = new JLabel("Id:");
-		lblId_4.setBounds(12, 125, 60, 17);
-		panelBn.add(lblId_4);
-
-		JLabel lblNombre = new JLabel("Nombre:");
-		lblNombre.setBounds(12, 154, 60, 17);
-		panelBn.add(lblNombre);
-
-		JLabel lblDuracin_1 = new JLabel("Duración:");
-		lblDuracin_1.setBounds(12, 183, 60, 17);
-		panelBn.add(lblDuracin_1);
-
-		JLabel lblDescripcin = new JLabel("Descripción:");
-		lblDescripcin.setBounds(12, 212, 73, 17);
-		panelBn.add(lblDescripcin);
-
-		txtIdBn = new JTextField();
-		txtIdBn.setEditable(false);
-		txtIdBn.setBounds(95, 123, 114, 21);
-		panelBn.add(txtIdBn);
-		txtIdBn.setColumns(10);
-
-		txtNomBn = new JTextField();
-		txtNomBn.setBounds(95, 152, 114, 21);
-		panelBn.add(txtNomBn);
-		txtNomBn.setColumns(10);
-
-		JTextArea DescripcionBn = new JTextArea();
-		DescripcionBn.setBounds(95, 212, 225, 48);
-		panelBn.add(DescripcionBn);
-
-		JComboBox comboBoxBn = new JComboBox();
-		comboBoxBn.setModel(new DefaultComboBoxModel(new String[] { "1 Dia", "1 Mes", "3 Meses", "1 Año" }));
-		comboBoxBn.setBounds(95, 178, 114, 26);
-		panelBn.add(comboBoxBn);
+		panelBn.setBackground(Color.WHITE);
+		tabbedPane.addTab("Bono", null, panelBn, null);
 
 		tableBn = new JTable(modeloBono);
-		tableBn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				int index = tableBn.getSelectedRow();
-				txtIdBn.setText(modeloBono.getValueAt(index, 0).toString());
-				txtNomBn.setText(modeloBono.getValueAt(index, 1).toString());
-				comboBoxBn.setSelectedItem(modeloBono.getValueAt(index, 2).toString());
-				DescripcionBn.setText(modeloBono.getValueAt(index, 3).toString());
-			}
-		});
-		tableBn.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		JScrollPane scrollPane5 = new JScrollPane(tableBn);
-		scrollPane5.setBounds(12, 12, 548, 99);
-		panelBn.add(scrollPane5);
+		estilizarTabla(tableBn);
+		JScrollPane scrollBn = new JScrollPane(tableBn);
+		scrollBn.setBounds(12, 12, 700, 110);
+		scrollBn.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
+		panelBn.add(scrollBn);
 
-		JButton btnAddBn = new JButton("Add");
-		btnAddBn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String nombre = txtNomBn.getText();
-				String tipo = comboBoxBn.getSelectedItem().toString();
-				/*
-				 * LocalDate hoy = LocalDate.now(); LocalDate duracion = null; switch
-				 * (seleccion) { case "1 día": duracion = hoy.plusDays(1); break; case "1 mes":
-				 * duracion = hoy.plusMonths(1); break; case "3 meses": duracion =
-				 * hoy.plusMonths(3); break; case "1 año": duracion = hoy.plusYears(1); break; }
-				 */
-				String descripcion = DescripcionBn.getText();
-				Bono bn = Bono.builder().nombre(nombre).tipo(tipo).descripcion(descripcion).build();
-				bDao.insertBono(bn);
-				javax.swing.JOptionPane.showMessageDialog(null, "Bono Creado");
-				btnMostrar.doClick();
-			}
-		});
-		btnAddBn.setBounds(455, 118, 105, 27);
+		panelBn.add(separador(12, 130, 700));
+
+		JLabel lblIdBn = lbl("ID:");
+		lblIdBn.setBounds(20, 142, 30, 17);
+		panelBn.add(lblIdBn);
+		JLabel lblNomBn = lbl("Nombre:");
+		lblNomBn.setBounds(20, 172, 60, 17);
+		panelBn.add(lblNomBn);
+		JLabel lblTipoBn = lbl("Duración:");
+		lblTipoBn.setBounds(20, 202, 65, 17);
+		panelBn.add(lblTipoBn);
+		JLabel lblDescBn = lbl("Descripción:");
+		lblDescBn.setBounds(20, 232, 80, 17);
+		panelBn.add(lblDescBn);
+
+		txtIdBn = txtId();
+		txtIdBn.setBounds(105, 140, 130, 26);
+		panelBn.add(txtIdBn);
+		txtNomBn = txt(10);
+		txtNomBn.setBounds(105, 170, 130, 26);
+		panelBn.add(txtNomBn);
+
+		JComboBox<String> comboBoxBn = new JComboBox<>(new String[] { "1 Dia", "1 Mes", "3 Meses", "1 Año" });
+		comboBoxBn.setBounds(105, 200, 130, 26);
+		panelBn.add(comboBoxBn);
+
+		JTextArea DescripcionBn = new JTextArea();
+		DescripcionBn.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+		DescripcionBn.setBorder(new LineBorder(new Color(180, 200, 230), 1, true));
+		JScrollPane scrollDesc = new JScrollPane(DescripcionBn);
+		scrollDesc.setBounds(105, 230, 200, 55);
+		panelBn.add(scrollDesc);
+
+		JButton btnAddBn = btnAdd("Añadir");
+		btnAddBn.setBounds(570, 140, 130, 32);
 		panelBn.add(btnAddBn);
-
-		JButton btnDelBn = new JButton("Del");
-		btnDelBn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdBn.getText());
-				bDao.deleteBono(codigo);
-				javax.swing.JOptionPane.showMessageDialog(null, "Bono Eliminado");
-				btnMostrar.doClick();
-			}
-		});
-		btnDelBn.setBounds(455, 233, 105, 27);
+		JButton btnEditBn = btnPrimario("Editar");
+		btnEditBn.setBounds(570, 185, 130, 32);
+		panelBn.add(btnEditBn);
+		JButton btnDelBn = btnDel("Eliminar");
+		btnDelBn.setBounds(570, 230, 130, 32);
 		panelBn.add(btnDelBn);
 
-		JButton btnEditBn = new JButton("Edit");
-		btnEditBn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int codigo = Integer.parseInt(txtIdBn.getText());
-				String nombre = txtNomBn.getText();
-				String tipo = comboBoxBn.getSelectedItem().toString();
-				String descripcion = DescripcionBn.getText();
-				Bono bn = bDao.selectBonoById(codigo);
-				bn.setNombre(nombre);
-				bn.setTipo(tipo);
-				bn.setDescripcion(descripcion);
-				bDao.updateBono(bn);
-				javax.swing.JOptionPane.showMessageDialog(null, "Bono Editado");
+		tableBn.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				int i = tableBn.getSelectedRow();
+				txtIdBn.setText(modeloBono.getValueAt(i, 0).toString());
+				txtNomBn.setText(modeloBono.getValueAt(i, 1).toString());
+				comboBoxBn.setSelectedItem(modeloBono.getValueAt(i, 2).toString());
+				DescripcionBn.setText(modeloBono.getValueAt(i, 3).toString());
+			}
+		});
+
+		btnAddBn.addActionListener(e -> {
+			Bono bn = Bono.builder().nombre(txtNomBn.getText()).tipo(comboBoxBn.getSelectedItem().toString())
+					.descripcion(DescripcionBn.getText()).build();
+			bDao.insertBono(bn);
+			JOptionPane.showMessageDialog(Admin, "Bono creado correctamente.");
+			btnMostrar.doClick();
+		});
+		btnEditBn.addActionListener(e -> {
+			int codigo = Integer.parseInt(txtIdBn.getText());
+			Bono bn = bDao.selectBonoById(codigo);
+			bn.setNombre(txtNomBn.getText());
+			bn.setTipo(comboBoxBn.getSelectedItem().toString());
+			bn.setDescripcion(DescripcionBn.getText());
+			bDao.updateBono(bn);
+			JOptionPane.showMessageDialog(Admin, "Bono actualizado.");
+			btnMostrar.doClick();
+		});
+		btnDelBn.addActionListener(e -> {
+			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar este bono?", "Confirmar",
+					JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION) {
+				bDao.deleteBono(Integer.parseInt(txtIdBn.getText()));
+				JOptionPane.showMessageDialog(Admin, "Bono eliminado.");
 				btnMostrar.doClick();
 			}
 		});
-		btnEditBn.setBounds(455, 176, 105, 27);
-		panelBn.add(btnEditBn);
 
+		btnMostrar.doClick();
 	}
 
 	public JFrame getFrame() {

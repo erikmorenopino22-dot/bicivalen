@@ -1,5 +1,6 @@
 package com.hibernate.model;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,6 +31,13 @@ public class Usuario {
 
 	@OneToMany(mappedBy = "usuario")
 	private Set<Ruta> rutas;
+	
+	@ManyToOne
+	@JoinColumn(name = "bono_id")
+	private Bono bonoActual;
+
+	@Column(name = "bono_expiracion")
+	private LocalDate bonoExpiracion;
 	
 	@Override
 	public String toString() { return id + " - " + nombre; }
