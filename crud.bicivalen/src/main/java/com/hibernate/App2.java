@@ -150,6 +150,7 @@ public class App2 {
 		btnLogin.setBorder(new EmptyBorder(0, 0, 0, 0));
 		btnLogin.setBounds(30, 175, 300, 38);
 		card.add(btnLogin);
+		btnLogin.setToolTipText("Acceder");
 
 		JLabel lblO = new JLabel("── ¿No tienes cuenta? ──", SwingConstants.CENTER);
 		lblO.setFont(new Font("Segoe UI", Font.PLAIN, 10));
@@ -165,18 +166,14 @@ public class App2 {
 		btnRegistrar.setBorder(new EmptyBorder(0, 0, 0, 0));
 		btnRegistrar.setBounds(30, 248, 300, 38);
 		card.add(btnRegistrar);
+		btnRegistrar.setToolTipText("Crear nuevo usuario");
 
-		JLabel lblVersion = new JLabel("v1.0 – BiciValen 2025", SwingConstants.CENTER);
-		lblVersion.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-		lblVersion.setForeground(new Color(120, 160, 200));
-		lblVersion.setBounds(0, 490, 460, 17);
-		panelFondo.add(lblVersion);
 
 		ActionListener loginAction = arg0 -> {
 			String input = txtEmail.getText().trim();
 			String password = new String(passwordLogin.getPassword());
 
-			if (input.equals("admin") && password.equals("1234")) {
+			if (input.equals("admin") && password.equals("1234")) { 
 				App ventanaAdmin = new App();
 				ventanaAdmin.getFrame().setVisible(true);
 				InicioSesion.dispose();
@@ -240,13 +237,6 @@ public class App2 {
 				if (!pwd.equals(conf)) {
 					JOptionPane.showMessageDialog(InicioSesion, "Las contraseñas no coinciden.");
 					return;
-				}
-				List<Usuario> todos = bDao.selectAllUsuario();
-				for (Usuario u : todos) {
-					if (u.getNombre().equalsIgnoreCase(nombre) || u.getEmail().equalsIgnoreCase(email)) {
-						JOptionPane.showMessageDialog(InicioSesion, "Ese nombre o email ya está registrado.");
-						return;
-					}
 				}
 
 				Usuario nuevo = Usuario.builder().nombre(nombre).email(email).contraseña(pwd).build();

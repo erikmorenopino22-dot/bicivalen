@@ -19,20 +19,25 @@ public class Bicicleta {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	int id;
 
+	@NotBlank(message = "El tipo no puede estar vacío")
+	@Size(max = 50, message = "El tipo no puede superar 50 caracteres")
 	@Column(name = "tipo")
 	String tipo;
 
+	@NotBlank(message = "El estado no puede estar vacío")
 	@Column(name = "estado")
 	String estado;
-	
+
+	@NotBlank(message = "El estado de uso no puede estar vacío")
 	@Column(name = "estadoUso")
-	String estadoUso; // "LIBRE", "EN_RUTA", "MANTENIMIENTO"
-	
+	String estadoUso;
+
 	@ManyToOne
-	@JoinColumn(name = "estacion_id") 
+	@JoinColumn(name = "estacion_id")
 	private Estacion estacion;
+
 	@Override
 	public String toString() {
-	    return tipo + " (" + id + ")";
+		return tipo + " (" + id + ")";
 	}
 }

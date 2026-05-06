@@ -22,6 +22,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -36,21 +37,26 @@ public class App3 {
 
 	private JFrame frame;
 	private JFrame frameLogin;
-
 	private BicivalenDAO bDao = new BicivalenDAO();
 	private Usuario usuarioActual;
-
 	private Bicicleta biciAlquilada = null;
 	private Estacion estacionOrigen = null;
 	private LocalDateTime horaInicio = null;
-
 	private DefaultTableModel modeloBicis;
 	private DefaultTableModel modeloRutas;
 	private DefaultTableModel modeloBonos;
-
 	private JTable tableBicis;
 	private JTable tableRutas;
 	private JTable tableBonos;
+	
+	private void centrarTabla(JTable table) {
+	    DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+	    centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+	    for (int i = 0; i < table.getColumnCount(); i++) {
+	        table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+	    }
+	}
 
 	private JLabel lblEstadoBono;
 
@@ -244,6 +250,7 @@ public class App3 {
 			if (c == JOptionPane.YES_OPTION)
 				cerrarSesion();
 		});
+		btnCerrarTop.setToolTipText("Cerrar Cuenta");
 
 		JTabbedPane tabbedPrincipal = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPrincipal.setFont(new Font("Segoe UI", Font.BOLD, 11));
@@ -325,6 +332,7 @@ public class App3 {
 		btnAlquilar.setFont(new Font("Segoe UI", Font.BOLD, 12));
 		btnAlquilar.setBounds(295, 250, 120, 34);
 		panelAl.add(btnAlquilar);
+		btnAlquilar.setToolTipText("Alquilar Bicicleta");
 
 		comboEstAl.addActionListener(e -> {
 			cargarBicicletasDeEstacion((Estacion) comboEstAl.getSelectedItem());
@@ -419,6 +427,7 @@ public class App3 {
 		btnDevolver.setFont(new Font("Segoe UI", Font.BOLD, 12));
 		btnDevolver.setBounds(295, 136, 120, 34);
 		panelDev.add(btnDevolver);
+		btnDevolver.setToolTipText("Alquilar Bicicleta");
 
 		tabbedBicis.addChangeListener(ev -> {
 			if (tabbedBicis.getSelectedIndex() == 1) {
@@ -475,6 +484,7 @@ public class App3 {
 		btnRefresh.setBounds(12, 410, 130, 28);
 		panelRutas.add(btnRefresh);
 		btnRefresh.addActionListener(e -> cargarRutasUsuario());
+		btnRefresh.setToolTipText("Actualizar Tabla");
 
 		JPanel panelBonos = new JPanel(null);
 		panelBonos.setBackground(Color.WHITE);
@@ -521,10 +531,12 @@ public class App3 {
 		btnComprar.setFont(new Font("Segoe UI", Font.BOLD, 12));
 		btnComprar.setBounds(12, 362, 130, 34);
 		panelBonos.add(btnComprar);
+		btnComprar.setToolTipText("Comprar Bono");
 
 		JButton btnMasInfo = btnAzul("Más Info");
 		btnMasInfo.setBounds(155, 362, 110, 34);
 		panelBonos.add(btnMasInfo);
+		btnMasInfo.setToolTipText("Mas Información");
 
 		tabbedPrincipal.addChangeListener(ev -> {
 			if (tabbedPrincipal.getSelectedIndex() == 2) {
@@ -619,11 +631,13 @@ public class App3 {
 				cerrarSesion();
 			}
 		});
-
+		btnEliminar.setToolTipText("Eliminar Cuenta");
+		
 		JButton btnCambiarPwd = new JButton("Cambiar Contraseña");
 		btnCambiarPwd.setFocusPainted(false);
 		btnCambiarPwd.setBounds(12, 92, 220, 32);
 		panelAyuda.add(btnCambiarPwd);
+		btnCambiarPwd.setToolTipText("Cambio de Contraseña");
 		btnCambiarPwd.addActionListener(e -> {
 			JPasswordField pA = new JPasswordField(15), pN = new JPasswordField(15), pC = new JPasswordField(15);
 			JPanel p = new JPanel(new java.awt.GridLayout(3, 2, 5, 8));
@@ -663,7 +677,8 @@ public class App3 {
 				JOptionPane.showMessageDialog(frame, "Correo actualizado a: " + nuevo);
 			}
 		});
-
+		btnCambiarEmail.setToolTipText("Cambiar Correo");
+		
 		JButton btnCerrarAyuda = btnRojo("Cerrar Sesión");
 		btnCerrarAyuda.setBounds(12, 180, 220, 32);
 		panelAyuda.add(btnCerrarAyuda);
@@ -673,7 +688,8 @@ public class App3 {
 			if (c == JOptionPane.YES_OPTION)
 				cerrarSesion();
 		});
-
+		btnCerrarAyuda.setToolTipText("Cerrar Sesion");
+		
 		cargarEstacionesEnCombo(comboEstAl);
 		cargarEstacionesEnCombo(comboEstDev);
 		if (comboEstAl.getItemCount() > 0)
@@ -688,6 +704,9 @@ public class App3 {
 			if (usuarioActual.getBonoActual() != null)
 				lblAvisoBono.setText("Tu bono caducó el " + usuarioActual.getBonoExpiracion() + ". Compra uno nuevo.");
 		}
+		centrarTabla(tableBicis);
+		centrarTabla(tableRutas);
+		centrarTabla(tableBonos);
 	}
 
 	public JFrame getFrame() {

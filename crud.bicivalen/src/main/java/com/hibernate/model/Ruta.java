@@ -34,7 +34,8 @@ public class Ruta {
 	private Estacion estacionD;
 
 	@Column(name = "duracion")
-	int duracion; // minutos por ejemplo
+	int duracion; 
+
 
 	@Column(name = "valoracion")
 	int valoracion;

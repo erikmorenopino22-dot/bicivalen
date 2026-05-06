@@ -20,19 +20,18 @@ public class BicivalenConection {
 	public static SessionFactory getSessionFactory() {
 		if (sessionFactory == null) {
 			try {
-				Configuration configuration = new Configuration();
+					Configuration configuration = new Configuration();
+					Properties settings = new Properties();
+					settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
+					settings.put(Environment.URL, "jdbc:mysql://127.0.0.1:3307/bicivalen?useSSL=false");
+					settings.put(Environment.USER, "alumno");
+					settings.put(Environment.PASS, "alumno");
+					settings.put(Environment.SHOW_SQL, "true");
+					settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
+					settings.put(Environment.HBM2DDL_AUTO, "update");
 
-				Properties settings = new Properties();
-				settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-				settings.put(Environment.URL,
-						"jdbc:mysql://79.112.0.180:3306/bicivalen?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
-				settings.put(Environment.USER, "Erik");
-				settings.put(Environment.PASS, "722007");
-				settings.put(Environment.SHOW_SQL, "true");
-				settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-				settings.put(Environment.HBM2DDL_AUTO, "update");
+					configuration.setProperties(settings);
 
-				configuration.setProperties(settings);
 
 				configuration.addAnnotatedClass(Bicicleta.class);
 

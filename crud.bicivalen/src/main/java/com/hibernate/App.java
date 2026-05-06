@@ -28,6 +28,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -65,6 +66,15 @@ public class App {
 				e.printStackTrace();
 			}
 		});
+	}
+	
+	private void centrarTabla(JTable table) {
+	    DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+	    centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+	    for (int i = 0; i < table.getColumnCount(); i++) {
+	        table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+	    }
 	}
 
 	private static void aplicarEstilo() {
@@ -247,6 +257,7 @@ public class App {
 		btnCerrarSesion.setForeground(Color.WHITE);
 		btnCerrarSesion.setFocusPainted(false);
 		btnCerrarSesion.setBounds(620, 17, 120, 28);
+		btnCerrarSesion.setToolTipText("Crear nuevo usuario");
 		cabecera.add(btnCerrarSesion);
 		btnCerrarSesion.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Seguro que quieres cerrar sesión?", "Cerrar sesión",
@@ -332,12 +343,15 @@ public class App {
 		JButton btnAddU = btnAdd("Añadir");
 		btnAddU.setBounds(570, 140, 130, 32);
 		panelU.add(btnAddU);
+		btnAddU.setToolTipText("Crear nuevo usuario");
 		JButton btnEditU = btnPrimario("Editar");
 		btnEditU.setBounds(570, 185, 130, 32);
 		panelU.add(btnEditU);
+		btnEditU.setToolTipText("Editar usuario");
 		JButton btnDelU = btnDel("Eliminar");
 		btnDelU.setBounds(570, 230, 130, 32);
 		panelU.add(btnDelU);
+		btnDelU.setToolTipText("Eliminar usuario");
 
 		tableU.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -443,12 +457,15 @@ public class App {
 		JButton btnAddR = btnAdd("Añadir");
 		btnAddR.setBounds(570, 140, 130, 32);
 		panelR.add(btnAddR);
+		btnAddR.setToolTipText("Crear nueva Ruta");
 		JButton btnEditR = btnPrimario("Editar");
 		btnEditR.setBounds(570, 185, 130, 32);
 		panelR.add(btnEditR);
+		btnEditR.setToolTipText("Editar Ruta");
 		JButton btnDelR = btnDel("Eliminar");
 		btnDelR.setBounds(570, 230, 130, 32);
 		panelR.add(btnDelR);
+		btnDelR.setToolTipText("Eliminar Ruta");
 
 		tableR.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -552,12 +569,15 @@ public class App {
 		JButton btnAddE = btnAdd("Añadir");
 		btnAddE.setBounds(570, 140, 130, 32);
 		panelE.add(btnAddE);
+		btnAddE.setToolTipText("Crear nueva Estación");
 		JButton btnEditE = btnPrimario("Editar");
 		btnEditE.setBounds(570, 185, 130, 32);
 		panelE.add(btnEditE);
+		btnEditE.setToolTipText("Editar Estación");
 		JButton btnDelE = btnDel("Eliminar");
 		btnDelE.setBounds(570, 230, 130, 32);
 		panelE.add(btnDelE);
+		btnDelE.setToolTipText("Eliminar Estación");
 
 		tableE.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -655,12 +675,15 @@ public class App {
 		JButton btnAddB = btnAdd("Añadir");
 		btnAddB.setBounds(570, 140, 130, 32);
 		panelB.add(btnAddB);
+		btnAddB.setToolTipText("Crear nueva Bici");
 		JButton btnEditB = btnPrimario("Editar");
 		btnEditB.setBounds(570, 185, 130, 32);
 		panelB.add(btnEditB);
+		btnAddB.setToolTipText("Editar Bici");
 		JButton btnDelB = btnDel("Eliminar");
 		btnDelB.setBounds(570, 230, 130, 32);
 		panelB.add(btnDelB);
+		btnAddB.setToolTipText("Eliminar Bici");
 
 		tableB.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -750,12 +773,15 @@ public class App {
 		JButton btnAddBn = btnAdd("Añadir");
 		btnAddBn.setBounds(570, 140, 130, 32);
 		panelBn.add(btnAddBn);
+		btnAddBn.setToolTipText("Crear nuevo Bono");
 		JButton btnEditBn = btnPrimario("Editar");
 		btnEditBn.setBounds(570, 185, 130, 32);
 		panelBn.add(btnEditBn);
+		btnEditBn.setToolTipText("Editar Bono");
 		JButton btnDelBn = btnDel("Eliminar");
 		btnDelBn.setBounds(570, 230, 130, 32);
 		panelBn.add(btnDelBn);
+		btnDelBn.setToolTipText("Eliminar Bono");
 
 		tableBn.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -795,6 +821,11 @@ public class App {
 		});
 
 		btnMostrar.doClick();
+		centrarTabla(tableU);
+		centrarTabla(tableR);
+		centrarTabla(tableE);
+		centrarTabla(tableB);
+		centrarTabla(tableBn);
 	}
 
 	public JFrame getFrame() {

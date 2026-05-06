@@ -20,14 +20,23 @@ public class Estacion {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	int id;
 
+	@NotBlank(message = "El nombre no puede estar vacío")
+	@Size(max = 100)
 	@Column(name = "nombre")
 	String nombre;
+
+	@NotBlank(message = "La ubicación no puede estar vacía")
 	@Column(name = "ubicacion")
 	String ubicacion;
+
+	@Min(value = 1, message = "La capacidad debe ser mayor que 0")
 	@Column(name = "capacidad")
 	int capacidad;
+
+	@Min(value = 0, message = "Los puestos no pueden ser negativos")
 	@Column(name = "puestos")
 	int puestos;
+	
 	@OneToMany(mappedBy = "estacion", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<Bicicleta> bicicletas = new HashSet<>();
 
@@ -40,8 +49,9 @@ public class Estacion {
 		bicicletas.remove(b);
 		b.setEstacion(null);
 	}
+
 	@Override
 	public String toString() {
-	    return nombre; // o nombre + " (" + id + ")"
+		return nombre;
 	}
 }
