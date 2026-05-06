@@ -443,31 +443,48 @@ public class App3 {
 		});
 
 		btnDevolver.addActionListener(e -> {
-			if (biciAlquilada == null) {
-				lblAvisoD.setText("No tienes ninguna bicicleta alquilada.");
-				return;
-			}
-			Estacion estDest = (Estacion) comboEstDev.getSelectedItem();
-			if (estDest == null) {
-				lblAvisoD.setText("Selecciona la estación de destino.");
-				return;
-			}
-			long durMin = ChronoUnit.MINUTES.between(horaInicio, LocalDateTime.now());
-			int val = (int) spinnerVal.getValue();
-			bDao.insertRuta(Ruta.builder().usuario(usuarioActual).bicicleta(biciAlquilada).estacionI(estacionOrigen)
-					.estacionD(estDest).duracion((int) durMin).valoracion(val).build());
-			biciAlquilada.setEstacion(estDest);
-			bDao.updateBicicleta(biciAlquilada);
-			JOptionPane.showMessageDialog(frame,
-					"¡Gracias!\nDuración: " + durMin + " min  ·  Valoración: " + val + " ★");
-			biciAlquilada = null;
-			estacionOrigen = null;
-			horaInicio = null;
-			lblBiciActual.setText("No tienes ninguna bici alquilada.");
-			lblBiciActual.setForeground(Color.GRAY);
-			lblAvisoD.setText(" ");
-			cargarRutasUsuario();
+		    if (biciAlquilada == null) {
+		        lblAvisoD.setText("No tienes ninguna bicicleta alquilada.");
+		        return;
+		    }
+		    Estacion estDest = (Estacion) comboEstDev.getSelectedItem();
+		    if (estDest == null) {
+		        lblAvisoD.setText("Selecciona la estación de destino.");
+		        return;
+		    }
+
+		    Estacion estDestCompleta = bDao.selectEstacionById(estDest.getId());
+		    if (estDestCompleta != null && estDestCompleta.getPuestos() <= 0) {
+		        JOptionPane.showMessageDialog(frame,
+		                "La estación «" + estDestCompleta.getNombre() + "» está llena. No puedes devolver aquí.",
+		                "Estación llena", JOptionPane.WARNING_MESSAGE);
+		        return;
+		    }
+
+		    long durMin = ChronoUnit.MINUTES.between(horaInicio, LocalDateTime.now());
+		    int val = (int) spinnerVal.getValue();
+		    bDao.insertRuta(Ruta.builder().usuario(usuarioActual).bicicleta(biciAlquilada).estacionI(estacionOrigen)
+		            .estacionD(estDest).duracion((int) durMin).valoracion(val).build());
+
+		    if (estDestCompleta != null) {
+		        estDestCompleta.setPuestos(estDestCompleta.getPuestos() + 1);
+		        bDao.updateEstacion(estDestCompleta);
+		    }
+
+		    biciAlquilada.setEstacion(estDest);
+		    bDao.updateBicicleta(biciAlquilada);
+		    
+		    JOptionPane.showMessageDialog(frame,
+		            "¡Gracias!\nDuración: " + durMin + " min  ·  Valoración: " + val + " ★");
+		    biciAlquilada = null;
+		    estacionOrigen = null;
+		    horaInicio = null;
+		    lblBiciActual.setText("No tienes ninguna bici alquilada.");
+		    lblBiciActual.setForeground(Color.GRAY);
+		    lblAvisoD.setText(" ");
+		    cargarRutasUsuario();
 		});
+
 
 		JPanel panelRutas = new JPanel(null);
 		panelRutas.setBackground(Color.WHITE);

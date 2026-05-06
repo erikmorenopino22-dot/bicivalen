@@ -1,9 +1,10 @@
 package com.hibernate.dao;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -14,7 +15,30 @@ import com.hibernate.model.Ruta;
 import com.hibernate.model.Usuario;
 import com.hibernate.util.BicivalenConection;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+
 public class BicivalenDAO {
+
+	private static final Validator VALIDATOR;
+	static {
+		try (ValidatorFactory f = Validation.byDefaultProvider().configure()
+				.messageInterpolator(new org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator())
+				.buildValidatorFactory()) {
+			VALIDATOR = f.getValidator();
+		}
+	}
+
+	private <T> void validar(T entidad) {
+		Set<ConstraintViolation<T>> violaciones = VALIDATOR.validate(entidad);
+		if (!violaciones.isEmpty()) {
+			String msg = violaciones.stream().map(ConstraintViolation::getMessage)
+					.collect(Collectors.joining("\n• ", "• ", ""));
+			throw new IllegalArgumentException(msg);
+		}
+	}
 
 	public List<Bicicleta> selectAllBicicleta() {
 		Session session = BicivalenConection.getSessionFactory().openSession();
@@ -25,26 +49,11 @@ public class BicivalenDAO {
 			lista = session.createQuery("FROM Bicicleta", Bicicleta.class).getResultList();
 			tx.commit();
 		} catch (Exception e) {
-			if (tx != null && tx.isActive()) {
+			if (tx != null && tx.isActive())
 				tx.rollback();
-			}
 			e.printStackTrace();
 		}
 		return lista;
-	}
-
-	public void insertBicicleta(Bicicleta b) {
-		Transaction transaction = null;
-		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
-			transaction = session.beginTransaction();
-			session.persist(b);
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction != null) {
-				transaction.rollback();
-			}
-			e.printStackTrace();
-		}
 	}
 
 	public Bicicleta selectBicicletaById(int codigo) {
@@ -55,39 +64,108 @@ public class BicivalenDAO {
 			b = session.get(Bicicleta.class, codigo);
 			transaction.commit();
 		} catch (Exception e) {
-			if (transaction != null) {
+			if (transaction != null)
 				transaction.rollback();
-			}
 			e.printStackTrace();
 		}
 		return b;
 	}
 
-	public void updateBicicleta(Bicicleta b) {
+	public void insertBicicleta(Bicicleta b) {
+		validar(b);
+
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
-			session.merge(b);
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction != null) {
-				transaction.rollback();
+
+			if (b.getEstacion() != null) {
+				Estacion est = session.get(Estacion.class, b.getEstacion().getId());
+				if (est.getPuestos() <= 0)
+					throw new IllegalStateException("No hay puestos libres en la estación «" + est.getNombre() + "».");
+				est.setPuestos(est.getPuestos() - 1);
+				b.setEstacion(est);
 			}
+
+			session.persist(b);
+			transaction.commit();
+
+		} catch (IllegalStateException e) {
+			if (transaction != null)
+				transaction.rollback();
+			throw e;
+		} catch (Exception e) {
+			if (transaction != null)
+				transaction.rollback();
+			e.printStackTrace();
+		}
+	}
+
+	public void updateBicicleta(Bicicleta b) {
+		validar(b);
+
+		Transaction transaction = null;
+		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+
+			Bicicleta antigua = session.get(Bicicleta.class, b.getId());
+			Estacion estAntigua = antigua.getEstacion();
+			Estacion estNueva = b.getEstacion() != null ? session.get(Estacion.class, b.getEstacion().getId()) : null;
+
+			int idAntiguo = estAntigua != null ? estAntigua.getId() : -1;
+			int idNuevo = estNueva != null ? estNueva.getId() : -1;
+
+			if (idAntiguo != idNuevo) {
+				if (estAntigua != null) {
+					Estacion ea = session.get(Estacion.class, estAntigua.getId());
+					ea.setPuestos(ea.getPuestos() + 1);
+				}
+				if (estNueva != null) {
+					if (estNueva.getPuestos() <= 0)
+						throw new IllegalStateException("No hay puestos libres en «" + estNueva.getNombre() + "».");
+					estNueva.setPuestos(estNueva.getPuestos() - 1);
+				}
+			}
+
+			antigua.setTipo(b.getTipo());
+			antigua.setEstado(b.getEstado());
+			antigua.setEstacion(estNueva);
+
+			session.merge(antigua);
+			transaction.commit();
+
+		} catch (IllegalStateException e) {
+			if (transaction != null)
+				transaction.rollback();
+			throw e;
+		} catch (Exception e) {
+			if (transaction != null)
+				transaction.rollback();
+			e.printStackTrace();
 		}
 	}
 
 	public void deleteBicicleta(int id) {
 		Transaction transaction = null;
-		Bicicleta b = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
-			b = session.get(Bicicleta.class, id);
-			session.remove(b);
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction != null) {
-				transaction.rollback();
+
+			Bicicleta b = session.get(Bicicleta.class, id);
+			if (b != null) {
+				if (b.getEstacion() != null) {
+					Estacion est = session.get(Estacion.class, b.getEstacion().getId());
+					if (est != null) {
+						est.getBicicletas().remove(b);
+						est.setPuestos(est.getPuestos() + 1);
+					}
+					b.setEstacion(null);
+				}
+				session.remove(b);
 			}
+			transaction.commit();
+
+		} catch (Exception e) {
+			if (transaction != null)
+				transaction.rollback();
 			e.printStackTrace();
 		}
 	}
@@ -108,7 +186,33 @@ public class BicivalenDAO {
 		return lista;
 	}
 
+	public Estacion selectEstacionById(int codigo) {
+		Transaction transaction = null;
+		Estacion e = null;
+		Session session = null;
+		try {
+			session = BicivalenConection.getSessionFactory().openSession();
+			transaction = session.beginTransaction();
+			e = session.get(Estacion.class, codigo);
+			if (e != null) {
+				Hibernate.initialize(e.getBicicletas());
+			}
+			transaction.commit();
+		} catch (Exception ex) {
+			if (transaction != null && transaction.isActive()) {
+				transaction.rollback();
+			}
+			ex.printStackTrace();
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+		return e;
+	}
+
 	public void insertEstacion(Estacion e) {
+		validar(e);
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
@@ -121,22 +225,8 @@ public class BicivalenDAO {
 		}
 	}
 
-	public Estacion selectEstacionById(int codigo) {
-		Transaction transaction = null;
-		Estacion e = null;
-		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
-			transaction = session.beginTransaction();
-			e = session.get(Estacion.class, codigo);
-			transaction.commit();
-		} catch (Exception ex) {
-			if (transaction != null)
-				transaction.rollback();
-			ex.printStackTrace();
-		}
-		return e;
-	}
-
 	public void updateEstacion(Estacion e) {
+		validar(e);
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
@@ -178,19 +268,6 @@ public class BicivalenDAO {
 		return lista;
 	}
 
-	public void insertRuta(Ruta r) {
-		Transaction transaction = null;
-		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
-			transaction = session.beginTransaction();
-			session.persist(r);
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction != null)
-				transaction.rollback();
-			e.printStackTrace();
-		}
-	}
-
 	public Ruta selectRutaById(int codigo) {
 		Transaction transaction = null;
 		Ruta r = null;
@@ -204,6 +281,19 @@ public class BicivalenDAO {
 			e.printStackTrace();
 		}
 		return r;
+	}
+
+	public void insertRuta(Ruta r) {
+		Transaction transaction = null;
+		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			session.persist(r);
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null)
+				transaction.rollback();
+			e.printStackTrace();
+		}
 	}
 
 	public void updateRuta(Ruta r) {
@@ -248,19 +338,6 @@ public class BicivalenDAO {
 		return lista;
 	}
 
-	public void insertUsuario(Usuario u) {
-		Transaction transaction = null;
-		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
-			transaction = session.beginTransaction();
-			session.persist(u);
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction != null)
-				transaction.rollback();
-			e.printStackTrace();
-		}
-	}
-
 	public Usuario selectUsuarioById(int codigo) {
 		Transaction transaction = null;
 		Usuario u = null;
@@ -276,7 +353,22 @@ public class BicivalenDAO {
 		return u;
 	}
 
+	public void insertUsuario(Usuario u) {
+		validar(u);
+		Transaction transaction = null;
+		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			session.persist(u);
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null)
+				transaction.rollback();
+			e.printStackTrace();
+		}
+	}
+
 	public void updateUsuario(Usuario u) {
+		validar(u);
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();
@@ -318,19 +410,6 @@ public class BicivalenDAO {
 		return lista;
 	}
 
-	public void insertBono(Bono bono) {
-		Transaction transaction = null;
-		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
-			transaction = session.beginTransaction();
-			session.persist(bono);
-			transaction.commit();
-		} catch (Exception e) {
-			if (transaction != null)
-				transaction.rollback();
-			e.printStackTrace();
-		}
-	}
-
 	public Bono selectBonoById(int codigo) {
 		Transaction transaction = null;
 		Bono bono = null;
@@ -346,7 +425,22 @@ public class BicivalenDAO {
 		return bono;
 	}
 
+	public void insertBono(Bono bono) {
+		validar(bono);
+		Transaction transaction = null;
+		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			session.persist(bono);
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null)
+				transaction.rollback();
+			e.printStackTrace();
+		}
+	}
+
 	public void updateBono(Bono bono) {
+		validar(bono);
 		Transaction transaction = null;
 		try (Session session = BicivalenConection.getSessionFactory().openSession()) {
 			transaction = session.beginTransaction();

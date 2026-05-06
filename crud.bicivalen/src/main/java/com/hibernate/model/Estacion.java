@@ -2,7 +2,6 @@ package com.hibernate.model;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -16,42 +15,44 @@ import lombok.*;
 @Builder
 public class Estacion {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    int id;
 
-	@NotBlank(message = "El nombre no puede estar vacío")
-	@Size(max = 100)
-	@Column(name = "nombre")
-	String nombre;
+    @NotBlank(message = "El nombre no puede estar vacío")
+    @Size(max = 100)
+    @Column(name = "nombre")
+    String nombre;
 
-	@NotBlank(message = "La ubicación no puede estar vacía")
-	@Column(name = "ubicacion")
-	String ubicacion;
+    @NotBlank(message = "La ubicación no puede estar vacía")
+    @Column(name = "ubicacion")
+    String ubicacion;
 
-	@Min(value = 1, message = "La capacidad debe ser mayor que 0")
-	@Column(name = "capacidad")
-	int capacidad;
+    @Min(value = 1, message = "La capacidad debe ser mayor que 0")
+    @Column(name = "capacidad")
+    int capacidad;
 
-	@Min(value = 0, message = "Los puestos no pueden ser negativos")
-	@Column(name = "puestos")
-	int puestos;
-	
-	@OneToMany(mappedBy = "estacion", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Set<Bicicleta> bicicletas = new HashSet<>();
+    @Min(value = 0, message = "Los puestos no pueden ser negativos")
+    @Column(name = "puestos")
+    int puestos;
 
-	public void addBicicleta(Bicicleta b) {
-		bicicletas.add(b);
-		b.setEstacion(this);
-	}
+    @OneToMany(mappedBy = "estacion",
+               cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH},
+               fetch = FetchType.EAGER)
+    private Set<Bicicleta> bicicletas = new HashSet<>();
 
-	public void removeBicicleta(Bicicleta b) {
-		bicicletas.remove(b);
-		b.setEstacion(null);
-	}
+    public void addBicicleta(Bicicleta b) {
+        bicicletas.add(b);
+        b.setEstacion(this);
+    }
 
-	@Override
-	public String toString() {
-		return nombre;
-	}
+    public void removeBicicleta(Bicicleta b) {
+        bicicletas.remove(b);
+        b.setEstacion(null);
+    }
+
+    @Override
+    public String toString() {
+        return nombre;
+    }
 }

@@ -3,13 +3,10 @@ package com.hibernate;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -27,7 +24,6 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
-import javax.swing.border.MatteBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
@@ -43,13 +39,15 @@ public class App {
 
 	private JFrame Admin;
 	private JFrame frameLogin;
-	private JTextField txtIdU, txtNomU, txtEmailU, txtBonoU;
+	private JTextField txtIdU, txtNomU, txtEmailU;
 	private JPasswordField passwordU;
 	private JTextField txtIdR, txtDuraciónR;
 	private JTextField txtIdE, txtNomE, txtCapacidadE, txtPuestosE, txtUbicacionE;
 	private JTextField txtIdB;
 	private JTextField txtIdBn, txtNomBn;
 	private JTable tableU, tableR, tableE, tableB, tableBn;
+
+	BicivalenDAO bDao = new BicivalenDAO();
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(() -> {
@@ -67,14 +65,12 @@ public class App {
 			}
 		});
 	}
-	
-	private void centrarTabla(JTable table) {
-	    DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-	    centerRenderer.setHorizontalAlignment(JLabel.CENTER);
 
-	    for (int i = 0; i < table.getColumnCount(); i++) {
-	        table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-	    }
+	private void centrarTabla(JTable table) {
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+		for (int i = 0; i < table.getColumnCount(); i++)
+			table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
 	}
 
 	private static void aplicarEstilo() {
@@ -84,10 +80,6 @@ public class App {
 		UIManager.put("Component.focusWidth", 1);
 		UIManager.put("Button.innerFocusWidth", 0);
 		UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 11));
-	}
-
-	public App() {
-		this(null);
 	}
 
 	public App(JFrame loginFrame) {
@@ -177,13 +169,44 @@ public class App {
 
 	private void cargarBicicletas(JComboBox<Bicicleta> combo, Estacion estacion) {
 		combo.removeAllItems();
-		if (estacion != null)
-			estacion.getBicicletas().forEach(combo::addItem);
+		if (estacion != null && estacion.getId() > 0) {
+			try {
+				BicivalenDAO bDao = new BicivalenDAO();
+				Estacion estacionCompleta = bDao.selectEstacionById(estacion.getId());
+
+				if (estacionCompleta != null && estacionCompleta.getBicicletas() != null) {
+					for (Bicicleta bici : estacionCompleta.getBicicletas()) {
+						combo.addItem(bici);
+					}
+				}
+			} catch (Exception ex) {
+				cargarTodasLasBicicletas(combo);
+			}
+		}
 	}
 
-	private void initialize() {
+	private void cargarTodasLasBicicletas(JComboBox<Bicicleta> combo) {
+		combo.removeAllItems();
+		try {
+			BicivalenDAO bDao = new BicivalenDAO();
+			List<Bicicleta> todas = bDao.selectAllBicicleta();
+			if (todas != null) {
+				todas.forEach(combo::addItem);
+			}
+		} catch (Exception ex) {
+			System.err.println("Error al cargar bicicletas: " + ex.getMessage());
+		}
+	}
 
-		BicivalenDAO bDao = new BicivalenDAO();
+	private void refrescarCombos(BicivalenDAO bDao, JComboBox<Estacion> comboEstOR, JComboBox<Estacion> comboEstDR,
+			JComboBox<Bicicleta> comboBiciR) {
+		cargarEstaciones(comboEstOR, bDao);
+		cargarEstaciones(comboEstDR, bDao);
+		comboBiciR.removeAllItems();
+		bDao.selectAllBicicleta().forEach(comboBiciR::addItem);
+	}
+
+	private void initialize() throws NumberFormatException {
 
 		DefaultTableModel modeloU = new DefaultTableModel(new String[] { "ID", "Nombre", "Email", "Contraseña" }, 0) {
 			public boolean isCellEditable(int r, int c) {
@@ -257,7 +280,6 @@ public class App {
 		btnCerrarSesion.setForeground(Color.WHITE);
 		btnCerrarSesion.setFocusPainted(false);
 		btnCerrarSesion.setBounds(620, 17, 120, 28);
-		btnCerrarSesion.setToolTipText("Crear nuevo usuario");
 		cabecera.add(btnCerrarSesion);
 		btnCerrarSesion.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Seguro que quieres cerrar sesión?", "Cerrar sesión",
@@ -310,7 +332,6 @@ public class App {
 		scrollU.setBounds(12, 12, 700, 110);
 		scrollU.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
 		panelU.add(scrollU);
-
 		panelU.add(separador(12, 130, 700));
 
 		JLabel lblIdU = lbl("ID:");
@@ -343,15 +364,12 @@ public class App {
 		JButton btnAddU = btnAdd("Añadir");
 		btnAddU.setBounds(570, 140, 130, 32);
 		panelU.add(btnAddU);
-		btnAddU.setToolTipText("Crear nuevo usuario");
 		JButton btnEditU = btnPrimario("Editar");
 		btnEditU.setBounds(570, 185, 130, 32);
 		panelU.add(btnEditU);
-		btnEditU.setToolTipText("Editar usuario");
 		JButton btnDelU = btnDel("Eliminar");
 		btnDelU.setBounds(570, 230, 130, 32);
 		panelU.add(btnDelU);
-		btnDelU.setToolTipText("Eliminar usuario");
 
 		tableU.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -364,29 +382,46 @@ public class App {
 		});
 
 		btnAddU.addActionListener(e -> {
-			Usuario u = Usuario.builder().nombre(txtNomU.getText()).email(txtEmailU.getText())
-					.contraseña(passwordU.getText()).build();
-			bDao.insertUsuario(u);
-			JOptionPane.showMessageDialog(Admin, "Usuario creado correctamente.");
-			btnMostrar.doClick();
+			try {
+				Usuario u = Usuario.builder().nombre(txtNomU.getText()).email(txtEmailU.getText())
+						.contraseña(passwordU.getText()).build();
+				bDao.insertUsuario(u);
+				JOptionPane.showMessageDialog(Admin, "Usuario creado correctamente.");
+				btnMostrar.doClick();
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnEditU.addActionListener(e -> {
-			int codigo = Integer.parseInt(txtIdU.getText());
-			Usuario u = bDao.selectUsuarioById(codigo);
-			u.setNombre(txtNomU.getText());
-			u.setEmail(txtEmailU.getText());
-			u.setContraseña(passwordU.getText());
-			bDao.updateUsuario(u);
-			JOptionPane.showMessageDialog(Admin, "Usuario actualizado.");
-			btnMostrar.doClick();
+			try {
+				int codigo = Integer.parseInt(txtIdU.getText());
+				Usuario u = bDao.selectUsuarioById(codigo);
+				u.setNombre(txtNomU.getText());
+				u.setEmail(txtEmailU.getText());
+				u.setContraseña(passwordU.getText());
+				bDao.updateUsuario(u);
+				JOptionPane.showMessageDialog(Admin, "Usuario actualizado.");
+				btnMostrar.doClick();
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnDelU.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar este usuario?", "Confirmar",
 					JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				bDao.deleteUsuario(Integer.parseInt(txtIdU.getText()));
-				JOptionPane.showMessageDialog(Admin, "Usuario eliminado.");
-				btnMostrar.doClick();
+				try {
+					bDao.deleteUsuario(Integer.parseInt(txtIdU.getText()));
+					JOptionPane.showMessageDialog(Admin, "Usuario eliminado.");
+					btnMostrar.doClick();
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(Admin, "Error al eliminar: " + ex.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 
@@ -401,7 +436,6 @@ public class App {
 		scrollR.setBounds(12, 12, 700, 110);
 		scrollR.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
 		panelR.add(scrollR);
-
 		panelR.add(separador(12, 130, 700));
 
 		JLabel lblIdR = lbl("ID:");
@@ -457,59 +491,72 @@ public class App {
 		JButton btnAddR = btnAdd("Añadir");
 		btnAddR.setBounds(570, 140, 130, 32);
 		panelR.add(btnAddR);
-		btnAddR.setToolTipText("Crear nueva Ruta");
 		JButton btnEditR = btnPrimario("Editar");
 		btnEditR.setBounds(570, 185, 130, 32);
 		panelR.add(btnEditR);
-		btnEditR.setToolTipText("Editar Ruta");
 		JButton btnDelR = btnDel("Eliminar");
 		btnDelR.setBounds(570, 230, 130, 32);
 		panelR.add(btnDelR);
-		btnDelR.setToolTipText("Eliminar Ruta");
 
 		tableR.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				int i = tableR.getSelectedRow();
 				txtIdR.setText(modeloR.getValueAt(i, 0).toString());
 				txtDuraciónR.setText(modeloR.getValueAt(i, 4).toString());
-				Object valObj = modeloR.getValueAt(i, 5);
 				try {
-					spinnerValR.setValue(Integer.parseInt(valObj.toString()));
+					spinnerValR.setValue(Integer.parseInt(modeloR.getValueAt(i, 5).toString()));
 				} catch (Exception ex) {
 				}
 			}
 		});
 
 		btnAddR.addActionListener(e -> {
-			Ruta r = Ruta.builder().usuario((Usuario) comboUsuR.getSelectedItem())
-					.bicicleta((Bicicleta) comboBiciR.getSelectedItem())
-					.estacionI((Estacion) comboEstOR.getSelectedItem())
-					.estacionD((Estacion) comboEstDR.getSelectedItem())
-					.duracion(Integer.parseInt(txtDuraciónR.getText())).valoracion((int) spinnerValR.getValue())
-					.build();
-			bDao.insertRuta(r);
-			JOptionPane.showMessageDialog(Admin, "Ruta creada correctamente.");
-			btnMostrar.doClick();
+			try {
+				Ruta r = Ruta.builder().usuario((Usuario) comboUsuR.getSelectedItem())
+						.bicicleta((Bicicleta) comboBiciR.getSelectedItem())
+						.estacionI((Estacion) comboEstOR.getSelectedItem())
+						.estacionD((Estacion) comboEstDR.getSelectedItem())
+						.duracion(Integer.parseInt(txtDuraciónR.getText())).valoracion((int) spinnerValR.getValue())
+						.build();
+				bDao.insertRuta(r);
+				JOptionPane.showMessageDialog(Admin, "Ruta creada correctamente.");
+				btnMostrar.doClick();
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnEditR.addActionListener(e -> {
-			Ruta r = bDao.selectRutaById(Integer.parseInt(txtIdR.getText()));
-			r.setUsuario((Usuario) comboUsuR.getSelectedItem());
-			r.setBicicleta((Bicicleta) comboBiciR.getSelectedItem());
-			r.setEstacionI((Estacion) comboEstOR.getSelectedItem());
-			r.setEstacionD((Estacion) comboEstDR.getSelectedItem());
-			r.setDuracion(Integer.parseInt(txtDuraciónR.getText()));
-			r.setValoracion((int) spinnerValR.getValue());
-			bDao.updateRuta(r);
-			JOptionPane.showMessageDialog(Admin, "Ruta actualizada.");
-			btnMostrar.doClick();
+			try {
+				Ruta r = bDao.selectRutaById(Integer.parseInt(txtIdR.getText()));
+				r.setUsuario((Usuario) comboUsuR.getSelectedItem());
+				r.setBicicleta((Bicicleta) comboBiciR.getSelectedItem());
+				r.setEstacionI((Estacion) comboEstOR.getSelectedItem());
+				r.setEstacionD((Estacion) comboEstDR.getSelectedItem());
+				r.setDuracion(Integer.parseInt(txtDuraciónR.getText()));
+				r.setValoracion((int) spinnerValR.getValue());
+				bDao.updateRuta(r);
+				JOptionPane.showMessageDialog(Admin, "Ruta actualizada.");
+				btnMostrar.doClick();
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnDelR.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar esta ruta?", "Confirmar",
 					JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				bDao.deleteRuta(Integer.parseInt(txtIdR.getText()));
-				JOptionPane.showMessageDialog(Admin, "Ruta eliminada.");
-				btnMostrar.doClick();
+				try {
+					bDao.deleteRuta(Integer.parseInt(txtIdR.getText()));
+					JOptionPane.showMessageDialog(Admin, "Ruta eliminada.");
+					btnMostrar.doClick();
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(Admin, "Error al eliminar: " + ex.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 
@@ -524,7 +571,6 @@ public class App {
 		scrollE.setBounds(12, 12, 700, 110);
 		scrollE.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
 		panelE.add(scrollE);
-
 		panelE.add(separador(12, 130, 700));
 
 		JLabel lblIdE = lbl("ID:");
@@ -569,15 +615,12 @@ public class App {
 		JButton btnAddE = btnAdd("Añadir");
 		btnAddE.setBounds(570, 140, 130, 32);
 		panelE.add(btnAddE);
-		btnAddE.setToolTipText("Crear nueva Estación");
 		JButton btnEditE = btnPrimario("Editar");
 		btnEditE.setBounds(570, 185, 130, 32);
 		panelE.add(btnEditE);
-		btnEditE.setToolTipText("Editar Estación");
 		JButton btnDelE = btnDel("Eliminar");
 		btnDelE.setBounds(570, 230, 130, 32);
 		panelE.add(btnDelE);
-		btnDelE.setToolTipText("Eliminar Estación");
 
 		tableE.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -587,38 +630,57 @@ public class App {
 				txtUbicacionE.setText(modeloE.getValueAt(i, 2).toString());
 				txtCapacidadE.setText(modeloE.getValueAt(i, 3).toString());
 				txtPuestosE.setText(modeloE.getValueAt(i, 4).toString());
-				int idEst = (int) modeloE.getValueAt(i, 0);
-				Estacion es = bDao.selectEstacionById(idEst);
+				Estacion es = bDao.selectEstacionById((int) modeloE.getValueAt(i, 0));
 				cargarBicicletas(comboBoxBicis, es);
 			}
 		});
 
 		btnAddE.addActionListener(e -> {
-			Estacion est = Estacion.builder().nombre(txtNomE.getText()).ubicacion(txtUbicacionE.getText())
-					.capacidad(Integer.parseInt(txtCapacidadE.getText()))
-					.puestos(Integer.parseInt(txtPuestosE.getText())).build();
-			bDao.insertEstacion(est);
-			JOptionPane.showMessageDialog(Admin, "Estación creada correctamente.");
-			btnMostrar.doClick();
+			try {
+				Estacion est = Estacion.builder().nombre(txtNomE.getText()).ubicacion(txtUbicacionE.getText())
+						.capacidad(Integer.parseInt(txtCapacidadE.getText()))
+						.puestos(Integer.parseInt(txtPuestosE.getText())).build();
+				bDao.insertEstacion(est);
+				JOptionPane.showMessageDialog(Admin, "Estación creada correctamente.");
+				btnMostrar.doClick();
+				refrescarCombos(bDao, comboEstOR, comboEstDR, comboBiciR);
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnEditE.addActionListener(e -> {
-			int codigo = Integer.parseInt(txtIdE.getText());
-			Estacion es = bDao.selectEstacionById(codigo);
-			es.setNombre(txtNomE.getText());
-			es.setUbicacion(txtUbicacionE.getText());
-			es.setCapacidad(Integer.parseInt(txtCapacidadE.getText()));
-			es.setPuestos(Integer.parseInt(txtPuestosE.getText()));
-			bDao.updateEstacion(es);
-			JOptionPane.showMessageDialog(Admin, "Estación actualizada.");
-			btnMostrar.doClick();
+			try {
+				int codigo = Integer.parseInt(txtIdE.getText());
+				Estacion es = bDao.selectEstacionById(codigo);
+				es.setNombre(txtNomE.getText());
+				es.setUbicacion(txtUbicacionE.getText());
+				es.setCapacidad(Integer.parseInt(txtCapacidadE.getText()));
+				es.setPuestos(Integer.parseInt(txtPuestosE.getText()));
+				bDao.updateEstacion(es);
+				JOptionPane.showMessageDialog(Admin, "Estación actualizada.");
+				btnMostrar.doClick();
+				refrescarCombos(bDao, comboEstOR, comboEstDR, comboBiciR);
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnDelE.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar esta estación?", "Confirmar",
 					JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				bDao.deleteEstacion(Integer.parseInt(txtIdE.getText()));
-				JOptionPane.showMessageDialog(Admin, "Estación eliminada.");
-				btnMostrar.doClick();
+				try {
+					bDao.deleteEstacion(Integer.parseInt(txtIdE.getText()));
+					JOptionPane.showMessageDialog(Admin, "Estación eliminada.");
+					btnMostrar.doClick();
+					refrescarCombos(bDao, comboEstOR, comboEstDR, comboBiciR);
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(Admin, "Error al eliminar: " + ex.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 
@@ -634,6 +696,7 @@ public class App {
 		scrollB.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
 		panelB.add(scrollB);
 		panelB.add(separador(12, 130, 700));
+
 		JLabel lblIdB = lbl("ID:");
 		lblIdB.setBounds(20, 142, 30, 17);
 		panelB.add(lblIdB);
@@ -666,24 +729,17 @@ public class App {
 		comboEstacionB.setBounds(100, 230, 130, 26);
 		panelB.add(comboEstacionB);
 
-		JCheckBox checkBoxB = new JCheckBox("");
-		checkBoxB.setBounds(100, 258, 30, 25);
-		panelB.add(checkBoxB);
-
 		cargarEstaciones(comboEstacionB, bDao);
 
 		JButton btnAddB = btnAdd("Añadir");
 		btnAddB.setBounds(570, 140, 130, 32);
 		panelB.add(btnAddB);
-		btnAddB.setToolTipText("Crear nueva Bici");
 		JButton btnEditB = btnPrimario("Editar");
 		btnEditB.setBounds(570, 185, 130, 32);
 		panelB.add(btnEditB);
-		btnAddB.setToolTipText("Editar Bici");
 		JButton btnDelB = btnDel("Eliminar");
 		btnDelB.setBounds(570, 230, 130, 32);
 		panelB.add(btnDelB);
-		btnAddB.setToolTipText("Eliminar Bici");
 
 		tableB.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -698,30 +754,110 @@ public class App {
 		});
 
 		btnAddB.addActionListener(e -> {
-			Bicicleta b = Bicicleta.builder().tipo(comboTipoB.getSelectedItem().toString())
-					.estado(comboEstadoB.getSelectedItem().toString())
-					.estacion((Estacion) comboEstacionB.getSelectedItem()).build();
-			bDao.insertBicicleta(b);
-			JOptionPane.showMessageDialog(Admin, "Bicicleta creada correctamente.");
-			btnMostrar.doClick();
+			try {
+				Estacion estacionSeleccionada = (Estacion) comboEstacionB.getSelectedItem();
+				if (estacionSeleccionada == null) {
+					JOptionPane.showMessageDialog(Admin, "Selecciona una estación primero.", "Error",
+							JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+
+				Bicicleta b = Bicicleta.builder().tipo(comboTipoB.getSelectedItem().toString())
+						.estado(comboEstadoB.getSelectedItem().toString()).estadoUso("Disponible")
+						.estacion(estacionSeleccionada).build();
+
+				BicivalenDAO bDaoNuevo = new BicivalenDAO();
+				bDaoNuevo.insertBicicleta(b);
+
+				JOptionPane.showMessageDialog(Admin, "✅ Bicicleta creada correctamente.\n" + "Tipo: " + b.getTipo()
+						+ "\n" + "Estación: " + b.getEstacion().getNombre(), "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+				btnMostrar.doClick();
+				refrescarCombos(new BicivalenDAO(), comboEstOR, comboEstDR, comboBiciR);
+
+			} catch (IllegalStateException ex) {
+				JOptionPane.showMessageDialog(Admin,
+						ex.getMessage() + "\n\n" + "La estación está llena. Libera espacio o elige otra estación.",
+						"Estación sin espacio", JOptionPane.WARNING_MESSAGE);
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, "Error de validación:\n" + ex.getMessage(), "Datos inválidos",
+						JOptionPane.WARNING_MESSAGE);
+			} catch (Exception ex) {
+				JOptionPane
+						.showMessageDialog(Admin,
+								"Error inesperado al crear la bicicleta.\n\n" + "Detalles: " + ex.getMessage() + "\n\n"
+										+ "Inténtalo de nuevo o contacta al soporte.",
+								"Error", JOptionPane.ERROR_MESSAGE);
+			}
 		});
+
 		btnEditB.addActionListener(e -> {
-			int codigo = Integer.parseInt(txtIdB.getText());
-			Bicicleta b = bDao.selectBicicletaById(codigo);
-			b.setTipo(comboTipoB.getSelectedItem().toString());
-			b.setEstado(comboEstadoB.getSelectedItem().toString());
-			b.setEstacion((Estacion) comboEstacionB.getSelectedItem());
-			bDao.updateBicicleta(b);
-			JOptionPane.showMessageDialog(Admin, "Bicicleta actualizada.");
-			btnMostrar.doClick();
+			try {
+				if (txtIdB.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(Admin, "Selecciona una bicicleta de la tabla para editar.",
+							"Sin selección", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+
+				int codigo = Integer.parseInt(txtIdB.getText());
+				Estacion estacionSeleccionada = (Estacion) comboEstacionB.getSelectedItem();
+
+				if (estacionSeleccionada == null) {
+					JOptionPane.showMessageDialog(Admin, "Selecciona una estación válida.", "Error",
+							JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+
+				BicivalenDAO bDaoNuevo = new BicivalenDAO();
+				Bicicleta b = bDaoNuevo.selectBicicletaById(codigo);
+
+				if (b == null) {
+					JOptionPane.showMessageDialog(Admin, "La bicicleta ya no existe en la base de datos.",
+							"No encontrada", JOptionPane.WARNING_MESSAGE);
+					btnMostrar.doClick();
+					return;
+				}
+
+				b.setTipo(comboTipoB.getSelectedItem().toString());
+				b.setEstado(comboEstadoB.getSelectedItem().toString());
+				b.setEstacion(estacionSeleccionada);
+				bDaoNuevo.updateBicicleta(b);
+
+				JOptionPane.showMessageDialog(
+						Admin, "Bicicleta actualizada correctamente.\n" + "ID: " + b.getId() + "\n"
+								+ "Nueva ubicación: " + b.getEstacion().getNombre(),
+						"Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+				btnMostrar.doClick();
+				refrescarCombos(new BicivalenDAO(), comboEstOR, comboEstDR, comboBiciR);
+
+			} catch (IllegalStateException ex) {
+				JOptionPane.showMessageDialog(Admin,
+						ex.getMessage() + "\n\n"
+								+ "La estación destino está llena. No se puede mover la bicicleta allí.",
+						"Estación sin espacio", JOptionPane.WARNING_MESSAGE);
+			} catch (NumberFormatException ex) {
+				JOptionPane.showMessageDialog(Admin, "El ID de la bicicleta no es válido.", "Error",
+						JOptionPane.ERROR_MESSAGE);
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(Admin,
+						"Error al actualizar la bicicleta.\n\n" + "Detalles: " + ex.getMessage(), "Error",
+						JOptionPane.ERROR_MESSAGE);
+			}
 		});
 		btnDelB.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar esta bicicleta?", "Confirmar",
 					JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				bDao.deleteBicicleta(Integer.parseInt(txtIdB.getText()));
-				JOptionPane.showMessageDialog(Admin, "Bicicleta eliminada.");
-				btnMostrar.doClick();
+				try {
+					bDao.deleteBicicleta(Integer.parseInt(txtIdB.getText()));
+					JOptionPane.showMessageDialog(Admin, "Bicicleta eliminada.");
+					btnMostrar.doClick();
+					refrescarCombos(bDao, comboEstOR, comboEstDR, comboBiciR);
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(Admin, "Error al eliminar: " + ex.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 
@@ -736,7 +872,6 @@ public class App {
 		scrollBn.setBounds(12, 12, 700, 110);
 		scrollBn.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
 		panelBn.add(scrollBn);
-
 		panelBn.add(separador(12, 130, 700));
 
 		JLabel lblIdBn = lbl("ID:");
@@ -773,15 +908,12 @@ public class App {
 		JButton btnAddBn = btnAdd("Añadir");
 		btnAddBn.setBounds(570, 140, 130, 32);
 		panelBn.add(btnAddBn);
-		btnAddBn.setToolTipText("Crear nuevo Bono");
 		JButton btnEditBn = btnPrimario("Editar");
 		btnEditBn.setBounds(570, 185, 130, 32);
 		panelBn.add(btnEditBn);
-		btnEditBn.setToolTipText("Editar Bono");
 		JButton btnDelBn = btnDel("Eliminar");
 		btnDelBn.setBounds(570, 230, 130, 32);
 		panelBn.add(btnDelBn);
-		btnDelBn.setToolTipText("Eliminar Bono");
 
 		tableBn.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -794,29 +926,46 @@ public class App {
 		});
 
 		btnAddBn.addActionListener(e -> {
-			Bono bn = Bono.builder().nombre(txtNomBn.getText()).tipo(comboBoxBn.getSelectedItem().toString())
-					.descripcion(DescripcionBn.getText()).build();
-			bDao.insertBono(bn);
-			JOptionPane.showMessageDialog(Admin, "Bono creado correctamente.");
-			btnMostrar.doClick();
+			try {
+				Bono bn = Bono.builder().nombre(txtNomBn.getText()).tipo(comboBoxBn.getSelectedItem().toString())
+						.descripcion(DescripcionBn.getText()).build();
+				bDao.insertBono(bn);
+				JOptionPane.showMessageDialog(Admin, "Bono creado correctamente.");
+				btnMostrar.doClick();
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnEditBn.addActionListener(e -> {
-			int codigo = Integer.parseInt(txtIdBn.getText());
-			Bono bn = bDao.selectBonoById(codigo);
-			bn.setNombre(txtNomBn.getText());
-			bn.setTipo(comboBoxBn.getSelectedItem().toString());
-			bn.setDescripcion(DescripcionBn.getText());
-			bDao.updateBono(bn);
-			JOptionPane.showMessageDialog(Admin, "Bono actualizado.");
-			btnMostrar.doClick();
+			try {
+				int codigo = Integer.parseInt(txtIdBn.getText());
+				Bono bn = bDao.selectBonoById(codigo);
+				bn.setNombre(txtNomBn.getText());
+				bn.setTipo(comboBoxBn.getSelectedItem().toString());
+				bn.setDescripcion(DescripcionBn.getText());
+				bDao.updateBono(bn);
+				JOptionPane.showMessageDialog(Admin, "Bono actualizado.");
+				btnMostrar.doClick();
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(Admin, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
+
 		btnDelBn.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(Admin, "¿Eliminar este bono?", "Confirmar",
 					JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				bDao.deleteBono(Integer.parseInt(txtIdBn.getText()));
-				JOptionPane.showMessageDialog(Admin, "Bono eliminado.");
-				btnMostrar.doClick();
+				try {
+					bDao.deleteBono(Integer.parseInt(txtIdBn.getText()));
+					JOptionPane.showMessageDialog(Admin, "Bono eliminado.");
+					btnMostrar.doClick();
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(Admin, "Error al eliminar: " + ex.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 

@@ -174,7 +174,7 @@ public class App2 {
 			String password = new String(passwordLogin.getPassword());
 
 			if (input.equals("admin") && password.equals("1234")) { 
-				App ventanaAdmin = new App();
+				App ventanaAdmin = new App(InicioSesion);
 				ventanaAdmin.getFrame().setVisible(true);
 				InicioSesion.dispose();
 				return;
