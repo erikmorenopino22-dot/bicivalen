@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiciValen - Tu bici, tu ciudad</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { font-family: 'Poppins', sans-serif; color: #333; overflow-x: hidden; }
+        :root { --azul-principal: #1a4a7a; --azul-claro: #3498db; --verde-valen: #2ecc71; --gris-fondo: #f4f7f6; }
+        .navbar { background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .navbar-brand { font-weight: 700; color: var(--azul-principal) !important; font-size: 1.5rem; }
+        .hero { background: linear-gradient(135deg, var(--azul-principal) 0%, var(--azul-claro) 100%); color: white; padding: 100px 0; border-bottom-left-radius: 50% 20px; border-bottom-right-radius: 50% 20px; text-align: center; }
+        .step-card { border: none; border-radius: 15px; transition: transform 0.3s ease; background: white; padding: 30px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); height: 100%; }
+        .step-card:hover { transform: translateY(-10px); }
+        .icon-circle { width: 80px; height: 80px; background: var(--gris-fondo); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; color: var(--azul-claro); }
+        .app-preview { background-color: var(--gris-fondo); padding: 80px 0; }
+        .btn-primary { background-color: var(--azul-claro); border: none; padding: 12px 30px; border-radius: 30px; font-weight: 600; }
+        footer { background: #222; color: white; padding: 40px 0; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><i class="fas fa-bicycle me-2"></i>BiciValen</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#como-funciona">Cómo funciona</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-primary text-white ms-lg-3" href="tarifas.html">Ver Tarifas</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container animate__animated animate__fadeIn">
+            <h1 class="display-3 fw-bold mb-4">Valencia en bici,<br>sin complicaciones</h1>
+            <p class="lead mb-5">La forma más rápida y ecológica de moverte por la ciudad.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <button class="btn btn-dark btn-lg"><i class="fab fa-apple me-2"></i>App Store</button>
+                <button class="btn btn-light btn-lg text-primary"><i class="fab fa-google-play me-2"></i>Play Store</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="como-funciona" class="py-5">
+        <div class="container py-5 text-center">
+            <h2 class="fw-bold mb-5">¿Cómo usar BiciValen?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="icon-circle"><i class="fas fa-mobile-alt"></i></div>
+                        <h4>Regístrate</h4>
+                        <p class="text-muted">Crea tu cuenta de usuario desde la aplicación en segundos.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="icon-circle"><i class="fas fa-map-marker-alt"></i></div>
+                        <h4>Busca tu estación</h4>
+                        <p class="text-muted">Encuentra estaciones cercanas y consulta la disponibilidad en tiempo real.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="icon-circle"><i class="fas fa-unlock"></i></div>
+                        <h4>¡A pedalear!</h4>
+                        <p class="text-muted">Alquila tu bici con un toque y empieza a disfrutar de tu ruta.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="app-preview">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-4">Interfaz sencilla e intuitiva</h2>
+            <div class="card shadow p-4 mx-auto" style="max-width: 500px; border-radius: 20px;">
+                <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
+                    <span class="fw-bold text-primary">BiciValen | Panel de Usuario</span>
+                </div>
+                <div class="bg-light p-3 rounded text-start">
+                    <table class="table table-sm white">
+                        <thead class="table-light">
+                            <tr><th>ID</th><th>Tipo</th><th>Estado</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>252</td><td>Eléctrica</td><td><span class="badge bg-success">Genial</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-primary w-100 mt-3">Alquilar ahora</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container text-center">
+            <p>© 2025 BiciValen - Movilidad Sostenible.</p>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
