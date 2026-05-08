@@ -168,12 +168,11 @@ public class App2 {
 		card.add(btnRegistrar);
 		btnRegistrar.setToolTipText("Crear nuevo usuario");
 
-
 		ActionListener loginAction = arg0 -> {
 			String input = txtEmail.getText().trim();
 			String password = new String(passwordLogin.getPassword());
 
-			if (input.equals("admin") && password.equals("1234")) { 
+			if (input.equals("admin") && password.equals("1234")) {
 				App ventanaAdmin = new App(InicioSesion);
 				ventanaAdmin.getFrame().setVisible(true);
 				InicioSesion.dispose();
@@ -205,45 +204,52 @@ public class App2 {
 		passwordLogin.addActionListener(loginAction);
 
 		btnRegistrar.addActionListener(e -> {
-			JTextField txtRegNombre = new JTextField(15);
-			JTextField txtRegEmail = new JTextField(15);
-			JPasswordField pwdReg = new JPasswordField(15);
-			JPasswordField pwdConf = new JPasswordField(15);
+		    JTextField txtRegNombre = new JTextField(15);
+		    JTextField txtRegEmail  = new JTextField(15);
+		    JPasswordField pwdReg   = new JPasswordField(15);
+		    JPasswordField pwdConf  = new JPasswordField(15);
 
-			JPanel regPanel = new JPanel(new java.awt.GridLayout(4, 2, 8, 10));
-			regPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-			regPanel.add(new JLabel("Nombre:"));
-			regPanel.add(txtRegNombre);
-			regPanel.add(new JLabel("Email:"));
-			regPanel.add(txtRegEmail);
-			regPanel.add(new JLabel("Contraseña:"));
-			regPanel.add(pwdReg);
-			regPanel.add(new JLabel("Confirmar pwd:"));
-			regPanel.add(pwdConf);
+		    JPanel regPanel = new JPanel(new java.awt.GridLayout(4, 2, 8, 10));
+		    regPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		    regPanel.add(new JLabel("Nombre:"));       regPanel.add(txtRegNombre);
+		    regPanel.add(new JLabel("Email:"));        regPanel.add(txtRegEmail);
+		    regPanel.add(new JLabel("Contraseña:"));   regPanel.add(pwdReg);
+		    regPanel.add(new JLabel("Confirmar pwd:")); regPanel.add(pwdConf);
 
-			int result = JOptionPane.showConfirmDialog(InicioSesion, regPanel, "Crear nueva cuenta",
-					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		    int result = JOptionPane.showConfirmDialog(InicioSesion, regPanel,
+		            "Crear nueva cuenta", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-			if (result == JOptionPane.OK_OPTION) {
-				String nombre = txtRegNombre.getText().trim();
-				String email = txtRegEmail.getText().trim();
-				String pwd = new String(pwdReg.getPassword());
-				String conf = new String(pwdConf.getPassword());
+		    if (result != JOptionPane.OK_OPTION) return;
 
-				if (nombre.isBlank() || email.isBlank() || pwd.isBlank()) {
-					JOptionPane.showMessageDialog(InicioSesion, "Todos los campos son obligatorios.");
-					return;
-				}
-				if (!pwd.equals(conf)) {
-					JOptionPane.showMessageDialog(InicioSesion, "Las contraseñas no coinciden.");
-					return;
-				}
+		    String nombre = txtRegNombre.getText().trim();
+		    String email  = txtRegEmail.getText().trim();
+		    String pwd    = new String(pwdReg.getPassword());
+		    String conf   = new String(pwdConf.getPassword());
 
-				Usuario nuevo = Usuario.builder().nombre(nombre).email(email).contraseña(pwd).build();
-				bDao.insertUsuario(nuevo);
-
-				JOptionPane.showMessageDialog(InicioSesion, "¡Cuenta creada correctamente!\nYa puedes iniciar sesión.");
-			}
+		    if (nombre.isBlank() || email.isBlank() || pwd.isBlank()) {
+		        JOptionPane.showMessageDialog(InicioSesion, "Todos los campos son obligatorios.");
+		    } else if (!email.matches("^\\w+@\\w+\\.[a-z]{2,6}$")) {
+		        JOptionPane.showMessageDialog(InicioSesion, "Formato de email incorrecto.",
+		                "Error", JOptionPane.WARNING_MESSAGE);      
+		    } else if (pwd.length() < 6) {                            
+		        JOptionPane.showMessageDialog(InicioSesion,
+		                "La contraseña debe tener al menos 6 caracteres.",
+		                "Error", JOptionPane.WARNING_MESSAGE);
+		    } else if (!pwd.equals(conf)) {
+		        JOptionPane.showMessageDialog(InicioSesion, "Las contraseñas no coinciden.",
+		                "Error", JOptionPane.WARNING_MESSAGE);
+		    } else {
+		        try {
+		            Usuario nuevo = Usuario.builder()
+		                    .nombre(nombre).email(email).contraseña(pwd).build();
+		            bDao.insertUsuario(nuevo);
+		            JOptionPane.showMessageDialog(InicioSesion,
+		                    "¡Cuenta creada correctamente!\nYa puedes iniciar sesión.");
+		        } catch (IllegalArgumentException ex) {
+		            JOptionPane.showMessageDialog(InicioSesion, ex.getMessage(),
+		                    "Error de validación", JOptionPane.WARNING_MESSAGE);
+		        }
+		    }
 		});
 	}
 

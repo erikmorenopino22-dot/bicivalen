@@ -225,7 +225,7 @@ public class App {
 				return false;
 			}
 		};
-		DefaultTableModel modeloB = new DefaultTableModel(new String[] { "ID", "Tipo", "Estado", "Ubicación" }, 0) {
+		DefaultTableModel modeloB = new DefaultTableModel(new String[] { "ID", "Tipo", "Estado" }, 0) {
 			public boolean isCellEditable(int r, int c) {
 				return false;
 			}

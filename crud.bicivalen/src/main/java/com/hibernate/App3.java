@@ -6,6 +6,11 @@ import java.awt.Font;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -48,14 +53,14 @@ public class App3 {
 	private JTable tableBicis;
 	private JTable tableRutas;
 	private JTable tableBonos;
-	
-	private void centrarTabla(JTable table) {
-	    DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-	    centerRenderer.setHorizontalAlignment(JLabel.CENTER);
 
-	    for (int i = 0; i < table.getColumnCount(); i++) {
-	        table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-	    }
+	private void centrarTabla(JTable table) {
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+		for (int i = 0; i < table.getColumnCount(); i++) {
+			table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+		}
 	}
 
 	private JLabel lblEstadoBono;
@@ -384,6 +389,10 @@ public class App3 {
 			biciAlquilada = bDao.selectBicicletaById((int) modeloBicis.getValueAt(fila, 0));
 			estacionOrigen = (Estacion) comboEstAl.getSelectedItem();
 			horaInicio = LocalDateTime.now();
+
+			biciAlquilada.setEstacion(null);
+			bDao.updateBicicleta(biciAlquilada);
+
 			JOptionPane.showMessageDialog(frame, "¡Buen viaje!\nBicicleta: " + biciAlquilada + "\nDesde: "
 					+ estacionOrigen.getNombre() + "\nBono activo hasta: " + usuarioActual.getBonoExpiracion());
 			lblAvisoAl.setText(" ");
@@ -443,48 +452,42 @@ public class App3 {
 		});
 
 		btnDevolver.addActionListener(e -> {
-		    if (biciAlquilada == null) {
-		        lblAvisoD.setText("No tienes ninguna bicicleta alquilada.");
-		        return;
-		    }
-		    Estacion estDest = (Estacion) comboEstDev.getSelectedItem();
-		    if (estDest == null) {
-		        lblAvisoD.setText("Selecciona la estación de destino.");
-		        return;
-		    }
+			if (biciAlquilada == null) {
+				lblAvisoD.setText("No tienes ninguna bicicleta alquilada.");
+				return;
+			}
+			Estacion estDest = (Estacion) comboEstDev.getSelectedItem();
+			if (estDest == null) {
+				lblAvisoD.setText("Selecciona la estación de destino.");
+				return;
+			}
 
-		    Estacion estDestCompleta = bDao.selectEstacionById(estDest.getId());
-		    if (estDestCompleta != null && estDestCompleta.getPuestos() <= 0) {
-		        JOptionPane.showMessageDialog(frame,
-		                "La estación «" + estDestCompleta.getNombre() + "» está llena. No puedes devolver aquí.",
-		                "Estación llena", JOptionPane.WARNING_MESSAGE);
-		        return;
-		    }
+			Estacion estDestCompleta = bDao.selectEstacionById(estDest.getId());
+			if (estDestCompleta != null && estDestCompleta.getPuestos() <= 0) {
+				JOptionPane.showMessageDialog(frame,
+						"La estación «" + estDestCompleta.getNombre() + "» está llena. No puedes devolver aquí.",
+						"Estación llena", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
 
-		    long durMin = ChronoUnit.MINUTES.between(horaInicio, LocalDateTime.now());
-		    int val = (int) spinnerVal.getValue();
-		    bDao.insertRuta(Ruta.builder().usuario(usuarioActual).bicicleta(biciAlquilada).estacionI(estacionOrigen)
-		            .estacionD(estDest).duracion((int) durMin).valoracion(val).build());
+			long durMin = ChronoUnit.MINUTES.between(horaInicio, LocalDateTime.now());
+			int val = (int) spinnerVal.getValue();
+			bDao.insertRuta(Ruta.builder().usuario(usuarioActual).bicicleta(biciAlquilada).estacionI(estacionOrigen)
+					.estacionD(estDest).duracion((int) durMin).valoracion(val).build());
 
-		    if (estDestCompleta != null) {
-		        estDestCompleta.setPuestos(estDestCompleta.getPuestos() + 1);
-		        bDao.updateEstacion(estDestCompleta);
-		    }
+			biciAlquilada.setEstacion(estDest);
+			bDao.updateBicicleta(biciAlquilada);
 
-		    biciAlquilada.setEstacion(estDest);
-		    bDao.updateBicicleta(biciAlquilada);
-		    
-		    JOptionPane.showMessageDialog(frame,
-		            "¡Gracias!\nDuración: " + durMin + " min  ·  Valoración: " + val + " ★");
-		    biciAlquilada = null;
-		    estacionOrigen = null;
-		    horaInicio = null;
-		    lblBiciActual.setText("No tienes ninguna bici alquilada.");
-		    lblBiciActual.setForeground(Color.GRAY);
-		    lblAvisoD.setText(" ");
-		    cargarRutasUsuario();
+			JOptionPane.showMessageDialog(frame,
+					"¡Gracias!\nDuración: " + durMin + " min  ·  Valoración: " + val + " ★");
+			biciAlquilada = null;
+			estacionOrigen = null;
+			horaInicio = null;
+			lblBiciActual.setText("No tienes ninguna bici alquilada.");
+			lblBiciActual.setForeground(Color.GRAY);
+			lblAvisoD.setText(" ");
+			cargarRutasUsuario();
 		});
-
 
 		JPanel panelRutas = new JPanel(null);
 		panelRutas.setBackground(Color.WHITE);
@@ -497,11 +500,71 @@ public class App3 {
 		scrollRutas.setBorder(new LineBorder(new Color(180, 210, 240), 1, true));
 		panelRutas.add(scrollRutas);
 
-		JButton btnRefresh = btnAzul("Actualizar");
-		btnRefresh.setBounds(12, 410, 130, 28);
-		panelRutas.add(btnRefresh);
-		btnRefresh.addActionListener(e -> cargarRutasUsuario());
-		btnRefresh.setToolTipText("Actualizar Tabla");
+		JButton btnEstMasUsada = btnAzul("Estación más usada");
+		btnEstMasUsada.setBounds(155, 410, 190, 28);
+		panelRutas.add(btnEstMasUsada);
+		btnEstMasUsada.setToolTipText("Ver estación más frecuentada");
+
+		btnEstMasUsada.addActionListener(e -> {
+			List<Ruta> misRutas = bDao.selectAllRuta().stream()
+					.filter(r -> r.getUsuario() != null && r.getUsuario().getId() == usuarioActual.getId())
+					.collect(Collectors.toList());
+
+			if (misRutas.isEmpty()) {
+				JOptionPane.showMessageDialog(frame, "Aún no tienes rutas registradas.");
+				return;
+			}
+
+			Map<String, Long> conteo = new HashMap<>();
+			for (Ruta r : misRutas) {
+				if (r.getEstacionI() != null)
+					conteo.merge(r.getEstacionI().getNombre(), 1L, Long::sum);
+				if (r.getEstacionD() != null)
+					conteo.merge(r.getEstacionD().getNombre(), 1L, Long::sum);
+			}
+
+			conteo.entrySet().stream().max(Map.Entry.comparingByValue())
+					.ifPresent(
+							entry -> JOptionPane.showMessageDialog(
+									frame, "🏆 Estación más usada: " + entry.getKey() + "\nApariciones: "
+											+ entry.getValue() + " vez/veces",
+									"Estadística", JOptionPane.INFORMATION_MESSAGE));
+		});
+
+		JButton btnBiciPeor = btnRojo("Bici peor valorada");
+		btnBiciPeor.setBounds(358, 410, 190, 28);
+		panelRutas.add(btnBiciPeor);
+		btnBiciPeor.setToolTipText("Ver bicicleta con peor media de valoración");
+
+		btnBiciPeor.addActionListener(e -> {
+			List<Ruta> misRutas = bDao
+					.selectAllRuta().stream().filter(r -> r.getUsuario() != null
+							&& r.getUsuario().getId() == usuarioActual.getId() && r.getBicicleta() != null)
+					.collect(Collectors.toList());
+
+			if (misRutas.isEmpty()) {
+				JOptionPane.showMessageDialog(frame, "Aún no tienes rutas con bicicleta registradas.");
+				return;
+			}
+
+			Map<String, Double> sumas = new HashMap<>();
+			Map<String, Long> cuentas = new HashMap<>();
+			for (Ruta r : misRutas) {
+				String clave = r.getBicicleta().toString();
+				sumas.merge(clave, (double) r.getValoracion(), Double::sum);
+				cuentas.merge(clave, 1L, Long::sum);
+			}
+
+			sumas.entrySet().stream().min(Comparator.comparingDouble(en -> en.getValue() / cuentas.get(en.getKey())))
+					.ifPresent(entry -> {
+						double media = entry.getValue() / cuentas.get(entry.getKey());
+						JOptionPane.showMessageDialog(frame,
+								"⚠️ Bicicleta peor valorada: " + entry.getKey() + "\nMedia de valoración: "
+										+ String.format("%.1f", media) + " ★" + "\nRutas registradas: "
+										+ cuentas.get(entry.getKey()),
+								"Estadística", JOptionPane.INFORMATION_MESSAGE);
+					});
+		});
 
 		JPanel panelBonos = new JPanel(null);
 		panelBonos.setBackground(Color.WHITE);
@@ -649,7 +712,7 @@ public class App3 {
 			}
 		});
 		btnEliminar.setToolTipText("Eliminar Cuenta");
-		
+
 		JButton btnCambiarPwd = new JButton("Cambiar Contraseña");
 		btnCambiarPwd.setFocusPainted(false);
 		btnCambiarPwd.setBounds(12, 92, 220, 32);
@@ -664,38 +727,59 @@ public class App3 {
 			p.add(pN);
 			p.add(new JLabel("Confirmar nueva:"));
 			p.add(pC);
+
 			if (JOptionPane.showConfirmDialog(frame, p, "Cambiar contraseña",
 					JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
-				String actual = new String(pA.getPassword()), nueva = new String(pN.getPassword()),
-						conf = new String(pC.getPassword());
+
+				String actual = new String(pA.getPassword());
+				String nueva = new String(pN.getPassword());
+				String conf = new String(pC.getPassword());
+
 				if (!actual.equals(usuarioActual.getContraseña()))
 					JOptionPane.showMessageDialog(frame, "La contraseña actual no es correcta.");
-				else if (!nueva.equals(conf))
-					JOptionPane.showMessageDialog(frame, "Las nuevas contraseñas no coinciden.");
 				else if (nueva.isBlank())
 					JOptionPane.showMessageDialog(frame, "La nueva contraseña no puede estar vacía.");
+				else if (nueva.length() < 6)
+					JOptionPane.showMessageDialog(frame, "La contraseña debe tener al menos 6 caracteres.", "Error",
+							JOptionPane.WARNING_MESSAGE);
+				else if (!nueva.equals(conf))
+					JOptionPane.showMessageDialog(frame, "Las nuevas contraseñas no coinciden.");
 				else {
-					usuarioActual.setContraseña(nueva);
-					bDao.updateUsuario(usuarioActual);
-					JOptionPane.showMessageDialog(frame, "Contraseña actualizada.");
+					try {
+						usuarioActual.setContraseña(nueva);
+						bDao.updateUsuario(usuarioActual);
+						JOptionPane.showMessageDialog(frame, "Contraseña actualizada.");
+					} catch (IllegalArgumentException ex) {
+						JOptionPane.showMessageDialog(frame, ex.getMessage(), "Error de validación",
+								JOptionPane.WARNING_MESSAGE);
+					}
 				}
 			}
 		});
-
 		JButton btnCambiarEmail = new JButton("Cambiar Correo Electrónico");
 		btnCambiarEmail.setFocusPainted(false);
 		btnCambiarEmail.setBounds(12, 136, 220, 32);
 		panelAyuda.add(btnCambiarEmail);
 		btnCambiarEmail.addActionListener(e -> {
 			String nuevo = JOptionPane.showInputDialog(frame, "Nuevo correo electrónico:", usuarioActual.getEmail());
-			if (nuevo != null && !nuevo.isBlank()) {
+			if (nuevo == null || nuevo.isBlank())
+				return;
+			if (!nuevo.matches("^\\w+@\\w+\\.[a-z]{2,6}$")) {
+				JOptionPane.showMessageDialog(frame, "Formato de correo no válido.", "Error",
+						JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			try {
 				usuarioActual.setEmail(nuevo);
 				bDao.updateUsuario(usuarioActual);
 				JOptionPane.showMessageDialog(frame, "Correo actualizado a: " + nuevo);
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(frame, ex.getMessage(), "Error de validación",
+						JOptionPane.WARNING_MESSAGE);
 			}
 		});
 		btnCambiarEmail.setToolTipText("Cambiar Correo");
-		
+
 		JButton btnCerrarAyuda = btnRojo("Cerrar Sesión");
 		btnCerrarAyuda.setBounds(12, 180, 220, 32);
 		panelAyuda.add(btnCerrarAyuda);
@@ -706,7 +790,7 @@ public class App3 {
 				cerrarSesion();
 		});
 		btnCerrarAyuda.setToolTipText("Cerrar Sesion");
-		
+
 		cargarEstacionesEnCombo(comboEstAl);
 		cargarEstacionesEnCombo(comboEstDev);
 		if (comboEstAl.getItemCount() > 0)
