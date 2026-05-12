@@ -3,6 +3,10 @@ package com.hibernate;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -53,6 +57,7 @@ public class App3 {
 	private JTable tableBicis;
 	private JTable tableRutas;
 	private JTable tableBonos;
+	private JPanel mapaCanvas;
 
 	private void centrarTabla(JTable table) {
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -423,9 +428,40 @@ public class App3 {
 		lblVal.setBounds(12, 80, 120, 17);
 		panelDev.add(lblVal);
 
-		JSpinner spinnerVal = new JSpinner(new SpinnerNumberModel(5, 1, 5, 1));
-		spinnerVal.setBounds(135, 76, 70, 26);
-		panelDev.add(spinnerVal);
+		int[] valorSeleccionado = { 5 };
+
+		JLabel[] estrellas = new JLabel[5];
+		for (int i = 0; i < 5; i++) {
+			final int idx = i;
+			estrellas[i] = new JLabel("★");
+			estrellas[i].setFont(new Font("Dialog", Font.PLAIN, 24));
+			estrellas[i].setForeground(new Color(241, 196, 15)); // dorado
+			estrellas[i].setBounds(135 + i * 28, 70, 28, 30);
+			estrellas[i].setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+			panelDev.add(estrellas[i]);
+
+			estrellas[i].addMouseListener(new java.awt.event.MouseAdapter() {
+				@Override
+				public void mouseClicked(java.awt.event.MouseEvent e) {
+					valorSeleccionado[0] = idx + 1;
+					for (int j = 0; j < 5; j++)
+						estrellas[j].setForeground(j <= idx ? new Color(241, 196, 15) : new Color(200, 200, 200));
+				}
+
+				@Override
+				public void mouseEntered(java.awt.event.MouseEvent e) {
+					for (int j = 0; j < 5; j++)
+						estrellas[j].setForeground(j <= idx ? new Color(241, 196, 15) : new Color(200, 200, 200));
+				}
+
+				@Override
+				public void mouseExited(java.awt.event.MouseEvent e) {
+					for (int j = 0; j < 5; j++)
+						estrellas[j].setForeground(
+								j < valorSeleccionado[0] ? new Color(241, 196, 15) : new Color(200, 200, 200));
+				}
+			});
+		}
 
 		JLabel lblAvisoD = new JLabel(" ");
 		lblAvisoD.setForeground(new Color(192, 57, 43));
@@ -471,7 +507,7 @@ public class App3 {
 			}
 
 			long durMin = ChronoUnit.MINUTES.between(horaInicio, LocalDateTime.now());
-			int val = (int) spinnerVal.getValue();
+			int val = valorSeleccionado[0];
 			bDao.insertRuta(Ruta.builder().usuario(usuarioActual).bicicleta(biciAlquilada).estacionI(estacionOrigen)
 					.estacionD(estDest).duracion((int) durMin).valoracion(val).build());
 
@@ -487,6 +523,255 @@ public class App3 {
 			lblBiciActual.setForeground(Color.GRAY);
 			lblAvisoD.setText(" ");
 			cargarRutasUsuario();
+		});
+
+		JPanel panelMapa = new JPanel(null);
+		panelMapa.setBackground(Color.WHITE);
+		tabbedPrincipal.addTab("Mapa de Estaciones", null, panelMapa, null);
+
+		JLabel lblOrigenM = new JLabel("Origen:");
+		lblOrigenM.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		lblOrigenM.setForeground(new Color(60, 80, 120));
+		lblOrigenM.setBounds(12, 10, 60, 20);
+		panelMapa.add(lblOrigenM);
+
+		JComboBox<Estacion> comboOrigenM = new JComboBox<>();
+		comboOrigenM.setBounds(75, 8, 200, 24);
+		panelMapa.add(comboOrigenM);
+
+		JLabel lblDestinoM = new JLabel("Destino:");
+		lblDestinoM.setFont(new Font("Segoe UI", Font.BOLD, 11));
+		lblDestinoM.setForeground(new Color(60, 80, 120));
+		lblDestinoM.setBounds(295, 10, 60, 20);
+		panelMapa.add(lblDestinoM);
+
+		JComboBox<Estacion> comboDestinoM = new JComboBox<>();
+		comboDestinoM.setBounds(358, 8, 200, 24);
+		panelMapa.add(comboDestinoM);
+
+		JButton btnTrazarRuta = btnAzul("Trazar ruta");
+		btnTrazarRuta.setBounds(572, 6, 130, 28);
+		panelMapa.add(btnTrazarRuta);
+
+		mapaCanvas = new JPanel() {
+			Estacion origen = null;
+			Estacion destino = null;
+
+			private java.awt.Point[] calcularPosiciones(int n, int cx, int cy, int radio) {
+				java.awt.Point[] pts = new java.awt.Point[n];
+				for (int i = 0; i < n; i++) {
+					double angulo = 2 * Math.PI * i / n - Math.PI / 2;
+					pts[i] = new java.awt.Point(cx + (int) (radio * Math.cos(angulo)),
+							cy + (int) (radio * Math.sin(angulo)));
+				}
+				return pts;
+			}
+
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				Estacion origen = (Estacion) mapaCanvas.getClientProperty("origen");
+				Estacion destino = (Estacion) mapaCanvas.getClientProperty("destino");
+
+				Graphics2D g2 = (Graphics2D) g;
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+				List<Estacion> estaciones = bDao.selectAllEstacion();
+				if (estaciones == null || estaciones.isEmpty()) {
+					g2.setColor(Color.GRAY);
+					g2.drawString("No hay estaciones registradas.", 260, 200);
+					return;
+				}
+
+				int n = estaciones.size();
+				int cx = getWidth() / 2;
+				int cy = getHeight() / 2 - 10;
+				int r = Math.min(cx, cy) - 80;
+				int radioNodo = 22;
+
+				java.awt.Point[] pts = new java.awt.Point[n];
+				for (int i = 0; i < n; i++) {
+					double ang = 2 * Math.PI * i / n - Math.PI / 2;
+					pts[i] = new java.awt.Point(cx + (int) (r * Math.cos(ang)), cy + (int) (r * Math.sin(ang)));
+				}
+
+				g2.setColor(new Color(210, 220, 240));
+				g2.setStroke(new java.awt.BasicStroke(1.5f));
+				for (int i = 0; i < n; i++)
+					for (int j = i + 1; j < n; j++)
+						g2.drawLine(pts[i].x, pts[i].y, pts[j].x, pts[j].y);
+
+				if (origen != null && destino != null) {
+					int idxO = -1, idxD = -1;
+					for (int i = 0; i < n; i++) {
+						if (estaciones.get(i).getId() == origen.getId())
+							idxO = i;
+						if (estaciones.get(i).getId() == destino.getId())
+							idxD = i;
+					}
+					if (idxO >= 0 && idxD >= 0) {
+						g2.setColor(new Color(41, 128, 185, 200));
+						g2.setStroke(new java.awt.BasicStroke(4f, java.awt.BasicStroke.CAP_ROUND,
+								java.awt.BasicStroke.JOIN_ROUND));
+						g2.drawLine(pts[idxO].x, pts[idxO].y, pts[idxD].x, pts[idxD].y);
+
+						g2.setColor(new Color(41, 128, 185));
+						double ang = Math.atan2(pts[idxD].y - pts[idxO].y, pts[idxD].x - pts[idxO].x);
+						int ax = pts[idxD].x - (int) (20 * Math.cos(ang));
+						int ay = pts[idxD].y - (int) (20 * Math.sin(ang));
+						g2.fillOval(ax - 6, ay - 6, 12, 12);
+					}
+				}
+
+				for (int i = 0; i < n; i++) {
+					Estacion est = estaciones.get(i);
+					boolean esOrigen = origen != null && est.getId() == origen.getId();
+					boolean esDestino = destino != null && est.getId() == destino.getId();
+
+					g2.setColor(new Color(0, 0, 0, 30));
+					g2.fillOval(pts[i].x - radioNodo + 2, pts[i].y - radioNodo + 3, radioNodo * 2, radioNodo * 2);
+
+					Color colorNodo = esOrigen ? new Color(39, 174, 96)
+							: esDestino ? new Color(192, 57, 43) : new Color(41, 128, 185);
+					g2.setColor(colorNodo);
+					g2.fillOval(pts[i].x - radioNodo, pts[i].y - radioNodo, radioNodo * 2, radioNodo * 2);
+
+					g2.setColor(Color.WHITE);
+					g2.setStroke(new java.awt.BasicStroke(2.5f));
+					g2.drawOval(pts[i].x - radioNodo, pts[i].y - radioNodo, radioNodo * 2, radioNodo * 2);
+
+					g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+					g2.drawString("🚲", pts[i].x - 9, pts[i].y + 6);
+
+					double angEtiq = Math.atan2(pts[i].y - cy, pts[i].x - cx);
+					int offsetEtiq = radioNodo + 14;
+					int ex = pts[i].x + (int) (offsetEtiq * Math.cos(angEtiq));
+					int ey = pts[i].y + (int) (offsetEtiq * Math.sin(angEtiq));
+
+					String nombre = est.getNombre();
+					g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+					FontMetrics fmN = g2.getFontMetrics();
+					int nw = fmN.stringWidth(nombre);
+
+					int puestos = est.getPuestos();
+					String txtPuestos = puestos + " libres";
+					g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
+					FontMetrics fmP = g2.getFontMetrics();
+					int pw = fmP.stringWidth(txtPuestos);
+
+					int badgeW = pw + 10;
+					int badgeH = 15;
+					int badgeX = ex - badgeW / 2;
+
+					int nombreY, badgeY;
+					if (Math.sin(angEtiq) >= 0) {
+						nombreY = ey + fmN.getAscent() + 2;
+						badgeY = nombreY + 4;
+					} else {
+						nombreY = ey - fmP.getHeight() - 4;
+						badgeY = nombreY - fmN.getHeight() - 2;
+						int tmp = nombreY;
+						nombreY = badgeY + fmP.getHeight() + 2;
+						badgeY = tmp - fmP.getHeight();
+						nombreY = ey - badgeH - fmN.getHeight() - 2;
+						badgeY = ey - badgeH - 1;
+					}
+					g2.setColor(new Color(255, 255, 255, 210));
+					g2.fillRoundRect(ex - nw / 2 - 3, nombreY - fmN.getAscent() - 1, nw + 6, fmN.getHeight() + 2, 6, 6);
+					g2.setColor(new Color(30, 50, 90));
+					g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+					g2.drawString(nombre, ex - nw / 2, nombreY);
+					Color badgeColor = puestos > 0 ? new Color(39, 174, 96) : new Color(192, 57, 43);
+					g2.setColor(badgeColor);
+					g2.fillRoundRect(badgeX, badgeY, badgeW, badgeH, 8, 8);
+					g2.setColor(Color.WHITE);
+					g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
+					g2.drawString(txtPuestos, badgeX + 5, badgeY + badgeH - 3);
+				}
+				int ly = getHeight() - 50;
+				g2.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+
+				g2.setColor(new Color(39, 174, 96));
+				g2.fillOval(14, ly, 13, 13);
+				g2.setColor(new Color(30, 50, 90));
+				g2.drawString("Origen", 32, ly + 11);
+
+				g2.setColor(new Color(192, 57, 43));
+				g2.fillOval(14, ly + 18, 13, 13);
+				g2.setColor(new Color(30, 50, 90));
+				g2.drawString("Destino", 32, ly + 29);
+
+				g2.setColor(new Color(41, 128, 185));
+				g2.fillOval(14, ly + 36, 13, 13);
+				g2.setColor(new Color(30, 50, 90));
+				g2.drawString("Estación", 32, ly + 47);
+			}
+		};
+		mapaCanvas.setBackground(new Color(245, 248, 255));
+		mapaCanvas.setBounds(0, 42, 724, 420);
+		panelMapa.add(mapaCanvas);
+
+		mapaCanvas.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				List<Estacion> estaciones = bDao.selectAllEstacion();
+				if (estaciones == null || estaciones.isEmpty())
+					return;
+
+				int n = estaciones.size();
+				int cx = mapaCanvas.getWidth() / 2;
+				int cy = mapaCanvas.getHeight() / 2;
+				int r = Math.min(cx, cy) - 60;
+				int radioNodo = 18;
+
+				for (int i = 0; i < n; i++) {
+					double angulo = 2 * Math.PI * i / n - Math.PI / 2;
+					int px = cx + (int) (r * Math.cos(angulo));
+					int py = cy + (int) (r * Math.sin(angulo));
+					int dx = e.getX() - px;
+					int dy = e.getY() - py;
+					if (dx * dx + dy * dy <= radioNodo * radioNodo) {
+						Estacion estSeleccionada = estaciones.get(i);
+						tabbedPrincipal.setSelectedIndex(0);
+						for (int j = 0; j < comboEstAl.getItemCount(); j++) {
+							if (comboEstAl.getItemAt(j).getId() == estSeleccionada.getId()) {
+								comboEstAl.setSelectedIndex(j);
+								break;
+							}
+						}
+						return;
+					}
+				}
+			}
+		});
+		tabbedPrincipal.addChangeListener(ev -> {
+			if (tabbedPrincipal.getSelectedComponent() == panelMapa) {
+				comboOrigenM.removeAllItems();
+				comboDestinoM.removeAllItems();
+				bDao.selectAllEstacion().forEach(est -> {
+					comboOrigenM.addItem(est);
+					comboDestinoM.addItem(est);
+				});
+				mapaCanvas.repaint();
+			}
+		});
+
+		btnTrazarRuta.addActionListener(e -> {
+			Estacion o = (Estacion) comboOrigenM.getSelectedItem();
+			Estacion d = (Estacion) comboDestinoM.getSelectedItem();
+			if (o == null || d == null) {
+				JOptionPane.showMessageDialog(frame, "Selecciona origen y destino.");
+				return;
+			}
+			if (o.getId() == d.getId()) {
+				JOptionPane.showMessageDialog(frame, "El origen y el destino son la misma estación.");
+				return;
+			}
+			((javax.swing.JPanel) mapaCanvas).repaint();
+			mapaCanvas.putClientProperty("origen", o);
+			mapaCanvas.putClientProperty("destino", d);
+			mapaCanvas.repaint();
 		});
 
 		JPanel panelRutas = new JPanel(null);
